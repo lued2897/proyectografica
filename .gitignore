@@ -39,3 +39,12 @@
 
 # debug information files
 *.dwo
+
+.vs
+# *.fbx
+# *fbm
+# *.blend
+# *.blend1
+# *.jpg
+# *.png
+
