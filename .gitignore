@@ -41,10 +41,10 @@
 *.dwo
 
 .vs
-# *.fbx
-# *fbm
-# *.blend
-# *.blend1
-# *.jpg
-# *.png
+*.fbx
+*fbm
+*.blend
+*.blend1
+*.jpg
+*.png
 
