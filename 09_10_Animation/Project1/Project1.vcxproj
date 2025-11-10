@@ -105,12 +105,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\src\stv-labopengl-main\deps\irrklang\include;C:\src\stv-labopengl-main\deps\glm\include;C:\src\stv-labopengl-main\deps\glfw\MSVC2022\include;C:\src\stv-labopengl-main\deps\glad\MSVC2022\include;C:\src\stv-labopengl-main\deps\assimp\MSVC2022\include;C:\src\stv-labopengl-main\09_10_Animation\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\irrklang\include;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\glm\include;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\glfw\MSVC2022\include;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\glad\MSVC2022\include;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\assimp\MSVC2022\include;C:\Users\lalox\OneDrive\Documentos\proyectografica\09_10_Animation\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\src\stv-labopengl-main\deps\irrklang\lib\x64;C:\src\stv-labopengl-main\deps\glfw\MSVC2022\lib\x64\Debug;C:\src\stv-labopengl-main\deps\glad\MSVC2022\lib\x64\Debug;C:\src\stv-labopengl-main\deps\assimp\MSVC2022\lib\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\irrklang\lib\x64;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\glfw\MSVC2022\lib\x64\Debug;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\glad\MSVC2022\lib\x64\Debug;C:\Users\lalox\OneDrive\Documentos\proyectografica\deps\assimp\MSVC2022\lib\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glad.lib;glfw3.lib;irrKlang.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

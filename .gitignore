@@ -30,7 +30,6 @@
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
@@ -47,4 +46,6 @@
 *.blend1
 *.jpg
 *.png
+
+*.vcxproj
 
