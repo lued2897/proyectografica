@@ -26,6 +26,7 @@
 #include <material.h>
 #include <light.h>
 #include <cubemap.h>
+#include <particles.h>// ---------------------------------- Pariculas ----------------------------------
 
 #include <irrKlang.h>
 using namespace irrklang;
@@ -85,6 +86,15 @@ Shader *wavesShader;
 
 Shader *cubemapShader;
 Shader *dynamicShader;
+
+// ---------------------------------- Pariculas ----------------------------------
+Shader* particlesShader;
+// Partículas
+Particles particlesSystem(500); // creamos 200 partículas
+
+// Carga la información del modelo
+Model* particleModel;
+// ---------------------------------- Pariculas ----------------------------------
 
 // Carga la información del modelo
 Model	*terrain;
@@ -229,6 +239,12 @@ bool Start() {
 	//chest = new Model("models/untitled.fbx");
 	std::cout << "Fin Cofre lalo" << std::endl;
 
+	// ---------------------------------- Pariculas ----------------------------------
+	particlesShader = new Shader("shaders/13_particles.vs", "shaders/13_particles.fs");
+	
+	particleModel = new Model("modelsP/Burbuja1.fbx");
+	// ---------------------------------- Pariculas ----------------------------------
+
 	
 	{//basura
 		std::cout << "Carga basura" << std::endl;
@@ -371,6 +387,15 @@ bool Update() {
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 
+	// ---------------------------------- Pariculas ----------------------------------
+	elapsedTime += deltaTime;
+	if (elapsedTime > 1.0f / 30.0f) {
+		elapsedTime = 0.0f;
+	
+		particlesSystem.UpdatePhysics(deltaTime);
+	}
+	// ---------------------------------- Pariculas ----------------------------------
+	
 	// Procesa la entrada del teclado o mouse
 	processInput(window);
 
@@ -397,9 +422,39 @@ bool Update() {
 	{
 		mainCubeMap->drawCubeMap(*cubemapShader, projection, view);
 	}
+	
 	if (submarino) {
 
 		{
+			{
+				// Activación del shader de las partículas
+				particlesShader->use();
+				particlesShader->setMat4("projection", projection);
+				particlesShader->setMat4("view", view);
+			
+				// Activamos para objetos transparentes
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				glm::mat4 model;
+			
+				for (int psc = 0; psc < particlesSystem.particles.size(); psc++) {
+					Particle p_i = particlesSystem.particles.at(psc);
+			
+					// Aplicamos transformaciones del modelo
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, p_i.position); // translate it down so it's at the center of the scene
+					model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
+			
+					particlesShader->setMat4("model", model);
+			
+					// Dibujamos el modelo
+					particleModel->Draw(*particlesShader);
+				}
+				
+			}
+
+			
 			mLightsShader->use();
 
 			// Activamos para objetos transparentes
