@@ -25,9 +25,9 @@ public:
 	Particles(unsigned int numParticles) {
 		for (unsigned int i = 0; i < numParticles; i++) {
 			Particle P;
-			P.p0.x = (float)(rand() % 25-12); // posici髇 random de -12 a 12
-			P.p0.y = (float)(rand() % 8);    // posici髇 random de 0 a 7
-			P.p0.z = (float)(rand() % 25-12); // posici髇 random de -12 a 12
+			P.p0.x = (float)((rand() % 51) - 50); // posici贸n random de -400 a 400
+			P.p0.y = (float)(rand() % 6);    // posici贸n random de 0 a 5
+			P.p0.z = (float)((rand() % 51) - 50); // posici贸n random de -400 a 400
 
 			P.position = P.p0;
 			P.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -46,18 +46,18 @@ public:
 	void UpdatePhysics(float deltaTime) {
 		for (int i = 0; i < (int)(particles.size()); i++) {
 			Particle *P = &particles.at(i);
-			if (P->position.y < 0) P->position = P->p0;  // retornamos a la posici髇 original 
-			                                          // de la part韈ula cuando llega al piso
-			P->force = P->mass * gravity; // +P->mass * glm::vec3(0.5f, 0.0f, 0.0f);         // Suma de fuerzas totales actuando en la part韈ula
+			if (P->position.y > 10) P->position = P->p0;  // retornamos a la posici贸n original 
+			                                          // de la part铆cula cuando llega al punto m谩ximo en Y
+			P->force = P->mass * gravity; // +P->mass * glm::vec3(0.5f, 0.0f, 0.0f);         // Suma de fuerzas totales actuando en la part铆cula
 			P->acceleration = P->force / P->mass; // segunda ley de Newton
-			P->velocity += P->acceleration * deltaTime; // Integral de la aceleraci髇 -> velocidad
-			P->position += P->velocity * deltaTime;     // Integral de la velocidad -> posici髇
+			P->velocity += P->acceleration * deltaTime; // Integral de la aceleraci贸n -> velocidad
+			P->position += P->velocity * deltaTime;     // Integral de la velocidad -> posici贸n
 		}
 	}
 
 private:
 
-	glm::vec3 gravity = glm::vec3(0.0f, -0.1f, 0.0f);
+	glm::vec3 gravity = glm::vec3(0.0f, 0.1f, 0.0f);
 
 };
 
