@@ -93,7 +93,8 @@ Model   *door;
 Model   *moon;
 Model   *gridMesh;
 Model	*chest;
-//animales
+
+// 
 //basura
 Model *bolsa;
 Model *tenedor;
@@ -108,6 +109,19 @@ Model *botella_plastico;
 
 // Modelos animados
 AnimatedModel   *character01;
+
+//animales
+AnimatedModel *pez;
+Model *tortuga;
+AnimatedModel *medusa;
+AnimatedModel *pulpo;
+AnimatedModel *calamar;
+Model *estrella;
+AnimatedModel *mantaraya;
+Model *caballito;
+AnimatedModel *delfin;
+AnimatedModel *cangrejo;
+
 
 float tradius = 10.0f;
 float theta = 0.0f;
@@ -214,7 +228,7 @@ bool Start() {
 		std::cout << "1" << std::endl;
 		tenedor = new Model("models/FORK.fbx");
 		std::cout << "2" << std::endl;
-		//cuchara = new Model("models/Cuchara.fbx");
+		cuchara = new Model("models/CucharaNOMODIFIERS222.fbx");
 		std::cout << "3" << std::endl;
 		tapa = new Model("models/Tapa_dorada.fbx");
 		std::cout << "4" << std::endl;
@@ -231,6 +245,31 @@ bool Start() {
 		botella_plastico = new Model("models/botellaplastico.fbx");
 		std::cout << "10" << std::endl;
 		std::cout << "Termina basura" << std::endl;
+	}
+	
+	{//Animales
+		std::cout << "Carga animales" << std::endl;
+		pez = new AnimatedModel("models/pezBien.fbx");
+		std::cout << "1" << std::endl;
+		tortuga = new Model("models/tortugaBien.fbx");
+		std::cout << "2" << std::endl;
+		medusa = new AnimatedModel("models/jellyfish.fbx");
+		std::cout << "3" << std::endl;
+		pulpo = new AnimatedModel("models/pulpoAnimado.fbx");
+		std::cout << "4" << std::endl;
+		cangrejo = new AnimatedModel("models/Crab.fbx");
+		std::cout << "5" << std::endl;
+		calamar = new AnimatedModel("models/calamarAnimado.fbx");
+		std::cout << "6" << std::endl;
+		//estrella = new Model("models/star.fbx");
+		std::cout << "7" << std::endl;
+		mantaraya = new AnimatedModel("models/ray_merged.fbx");
+		std::cout << "8" << std::endl;
+		//caballito = new Model("models/caballito de mar.fbx");
+		std::cout << "9" << std::endl;
+		delfin = new AnimatedModel("models/DolphinFinal_Animate2.fbx");
+		std::cout << "10" << std::endl;
+		std::cout << "Termina animales" << std::endl;
 	}
 
 	character01 = new AnimatedModel("models/ray_merged.fbx");
@@ -394,6 +433,28 @@ bool Update() {
 			terrain->Draw(*mLightsShader);
 			//decor->Draw(*mLightsShader
 			//chest->Draw(*mLightsShader);
+			/*Model* bolsa;
+			Model* tenedor;
+			//Model* cuchara;
+			Model* tapa;
+			Model* lata;
+			Model* popote;
+			Model* cigarro;
+			Model* plato;
+			//Model* botella_vidrio;
+			Model* botella_plastico;*/
+			tenedor->Draw(*mLightsShader);
+			//cuchara->Draw(*mLightsShader);
+			tapa->Draw(*mLightsShader);
+			lata->Draw(*mLightsShader);
+			popote->Draw(*mLightsShader);
+			cigarro->Draw(*mLightsShader);
+			plato->Draw(*mLightsShader);
+			//botella_vidrio->Draw(*mLightsShader);
+			botella_plastico->Draw(*mLightsShader);
+			tortuga->Draw(*mLightsShader);
+
+
 
 
 			//dibuja basura
@@ -486,6 +547,14 @@ bool Update() {
 
 		{
 			character01->UpdateAnimation(deltaTime);
+			//pez->UpdateAnimation(deltaTime);
+			//tortuga->UpdateAnimation(deltaTime);
+			
+			
+			
+			
+			//cangrejo->UpdateAnimation(deltaTime);
+
 
 			// Activación del shader del personaje
 			dynamicShader->use();
@@ -499,17 +568,125 @@ bool Update() {
 			model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-
 			dynamicShader->setMat4("model", model);
 
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
 
 			// Dibujamos el modelo
 			character01->Draw(*dynamicShader);
+
+			/*AnimatedModel* pez;
+			AnimatedModel* tortuga;
+			AnimatedModel* medusa;
+			AnimatedModel* pulpo;
+			AnimatedModel* calamar;
+			AnimatedModel* estrella;
+			AnimatedModel* mantaraya;
+			AnimatedModel* caballito;
+			AnimatedModel* delfin;
+			AnimatedModel* cangrejo;*/
+
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
+			character01->Draw(*dynamicShader);
+			glUseProgram(0);
+
+
+			pez->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pez->gBones);
+			pez->Draw(*dynamicShader);
+			glUseProgram(0);
+
+			cangrejo->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
+			cangrejo->Draw(*dynamicShader);
+			glUseProgram(0);
+
+			medusa->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, medusa->gBones);
+			medusa->Draw(*dynamicShader);
+			glUseProgram(0);
+
+			pulpo->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
+			pulpo->Draw(*dynamicShader);
+			glUseProgram(0);
+
+			calamar->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-6.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
+			calamar->Draw(*dynamicShader);
+			glUseProgram(0);
+
+			mantaraya->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(6.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, mantaraya->gBones);
+			mantaraya->Draw(*dynamicShader);
+			glUseProgram(0);
+
+			delfin->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-9.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+			delfin->Draw(*dynamicShader);
+			glUseProgram(0);
+
+
 		}
 
 
-		glUseProgram(0);
+		
 
 	}
 	 
