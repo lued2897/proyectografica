@@ -92,7 +92,12 @@ Model	*decor;
 Model   *door;
 Model   *moon;
 Model   *gridMesh;
+
+
 Model	*chest;
+Model	*burbuja1;
+Model	*burbuja2;
+
 
 // 
 //basura
@@ -106,21 +111,24 @@ Model *cigarro;
 Model *plato;
 Model *botella_vidrio;
 Model *botella_plastico;
+Model *cofre;
 
 // Modelos animados
 AnimatedModel   *character01;
 
+
 //animales
-AnimatedModel *pez;
-Model *tortuga;
-AnimatedModel *medusa;
-AnimatedModel *pulpo;
-AnimatedModel *calamar;
-Model *estrella;
-AnimatedModel *mantaraya;
-Model *caballito;
-AnimatedModel *delfin;
-AnimatedModel *cangrejo;
+AnimatedModel	*pez;
+Model			*tortuga;
+AnimatedModel	*medusa;
+AnimatedModel	*pulpo;
+AnimatedModel	*calamar;
+Model			*estrella;
+AnimatedModel	*mantaraya;
+AnimatedModel	*caballito;
+AnimatedModel	*delfin;
+AnimatedModel	*cangrejo;
+Model			*erizo;
 
 
 float tradius = 10.0f;
@@ -228,7 +236,7 @@ bool Start() {
 		std::cout << "1" << std::endl;
 		tenedor = new Model("models/FORK.fbx");
 		std::cout << "2" << std::endl;
-		cuchara = new Model("models/CucharaNOMODIFIERS222.fbx");
+		cuchara = new Model("models/CucharaYaPorfavor.fbx");
 		std::cout << "3" << std::endl;
 		tapa = new Model("models/Tapa_dorada.fbx");
 		std::cout << "4" << std::endl;
@@ -236,22 +244,23 @@ bool Start() {
 		std::cout << "5" << std::endl;
 		popote = new Model("models/popote.fbx");
 		std::cout << "6" << std::endl;
-		cigarro = new Model("models/cigarro.fbx");
+		cigarro = new Model("models/Cigarro.fbx");
 		std::cout << "7" << std::endl;
 		plato = new Model("models/PLATE.fbx");
 		std::cout << "8" << std::endl;
-		//botella_vidrio = new Model("models/botelladevino.fbx");
+		botella_vidrio = new Model("models/botelladevino.fbx");
 		std::cout << "9" << std::endl;
 		botella_plastico = new Model("models/botellaplastico.fbx");
 		std::cout << "10" << std::endl;
 		std::cout << "Termina basura" << std::endl;
+		cofre = new Model("models/cofreahorasi.fbx");
 	}
 	
 	{//Animales
 		std::cout << "Carga animales" << std::endl;
 		pez = new AnimatedModel("models/pezBien.fbx");
 		std::cout << "1" << std::endl;
-		tortuga = new Model("models/tortugaBien.fbx");
+		tortuga = new Model("models/tortuga.fbx");
 		std::cout << "2" << std::endl;
 		medusa = new AnimatedModel("models/jellyfish.fbx");
 		std::cout << "3" << std::endl;
@@ -261,15 +270,21 @@ bool Start() {
 		std::cout << "5" << std::endl;
 		calamar = new AnimatedModel("models/calamarAnimado.fbx");
 		std::cout << "6" << std::endl;
-		//estrella = new Model("models/star.fbx");
+		estrella = new Model("models/star.fbx");
 		std::cout << "7" << std::endl;
 		mantaraya = new AnimatedModel("models/ray_merged.fbx");
 		std::cout << "8" << std::endl;
-		//caballito = new Model("models/caballito de mar.fbx");
+		caballito = new AnimatedModel("models/caballito de mar.fbx");
 		std::cout << "9" << std::endl;
 		delfin = new AnimatedModel("models/DolphinFinal_Animate2.fbx");
 		std::cout << "10" << std::endl;
+		erizo = new Model("models/Erizo_mar.fbx");
 		std::cout << "Termina animales" << std::endl;
+	}
+
+	{//etc
+		burbuja1 = new Model("models/Burbuja1.fbx");
+		burbuja2 = new Model("models/Burbuja2.fbx");
 	}
 
 	character01 = new AnimatedModel("models/ray_merged.fbx");
@@ -432,6 +447,8 @@ bool Update() {
 
 			terrain->Draw(*mLightsShader);
 			//decor->Draw(*mLightsShader
+			//glUseProgram(0);
+			
 			//chest->Draw(*mLightsShader);
 			/*Model* bolsa;
 			Model* tenedor;
@@ -443,38 +460,190 @@ bool Update() {
 			Model* plato;
 			//Model* botella_vidrio;
 			Model* botella_plastico;*/
-			tenedor->Draw(*mLightsShader);
-			//cuchara->Draw(*mLightsShader);
-			tapa->Draw(*mLightsShader);
-			lata->Draw(*mLightsShader);
-			popote->Draw(*mLightsShader);
-			cigarro->Draw(*mLightsShader);
-			plato->Draw(*mLightsShader);
-			//botella_vidrio->Draw(*mLightsShader);
-			botella_plastico->Draw(*mLightsShader);
-			tortuga->Draw(*mLightsShader);
 
-
-
-
-			//dibuja basura
-
-
+			//mLightsShader->use();
 			model = glm::mat4(1.0f);
-
-			// Actividad 5.1
-			// Efecto de puerta corrediza
-			model = glm::translate(model, glm::vec3(0.418f + door_offset, 0.0f, 6.75f));
-
-			// Efecto de puerta con bisagra
-			model = glm::rotate(model, glm::radians(door_rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
+			model = glm::translate(model, glm::vec3(-5.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
-			door->Draw(*mLightsShader);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			tenedor->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 5.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			cuchara->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-10.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			tapa->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(10.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			lata->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			popote->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 10.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			plato->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-10.0f, 0.0f, -10.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			botella_vidrio->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-5.0f, 0.0f, -5.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			botella_plastico->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(3.0f, 0.0f, -3.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			tortuga->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 3.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			estrella->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-5.0f, 0.0f, -5.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			cigarro->Draw(*mLightsShader);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-9.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(2.0f, 0.9f, 0.8f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			cofre->Draw(*mLightsShader);
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-12.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			erizo->Draw(*mLightsShader);
+			glUseProgram(0);
+
 		}
 
-		glUseProgram(0);
+		
 
 
 		// Actividad 5.2
@@ -502,7 +671,10 @@ bool Update() {
 			proceduralShader->setFloat("radius", 20.0f);
 			proceduralShader->setFloat("height", 20.0f);
 
-			moon->Draw(*proceduralShader);
+			//moon->Draw(*proceduralShader);
+			burbuja1->Draw(*proceduralShader);
+			burbuja2->Draw(*proceduralShader);
+
 			proceduralTime += 0.0001;
 
 		}
@@ -590,6 +762,19 @@ bool Update() {
 			character01->Draw(*dynamicShader);
 			glUseProgram(0);
 
+
+			caballito->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.001f, 1.001f, 1.001f));	// it's a bit too big for our scene, so scale it down
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, caballito->gBones);
+			caballito->Draw(*dynamicShader);
+			glUseProgram(0);
 
 			pez->UpdateAnimation(deltaTime);
 			dynamicShader->use();
