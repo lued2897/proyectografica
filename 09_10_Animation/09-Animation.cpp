@@ -533,11 +533,27 @@ bool Update() {
 			//Model* botella_vidrio;
 			Model* botella_plastico;*/
 
+
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-5.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::translate(model, glm::vec3(-5.0f, 0.5f, 4.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			bolsa->Draw(*mLightsShader);
+			//glUseProgram(0);
+
+
+			//mLightsShader->use();
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-5.0f, 0.15f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -551,7 +567,7 @@ bool Update() {
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 5.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -564,8 +580,8 @@ bool Update() {
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(-10.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.0005f, 0.0005f, 0.0005f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -578,8 +594,8 @@ bool Update() {
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(10.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -591,9 +607,9 @@ bool Update() {
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::translate(model, glm::vec3(0.0f, 0.1f, -10.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -605,9 +621,9 @@ bool Update() {
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 10.0f)); // translate it down so it's at the center of the scene
+			model = glm::translate(model, glm::vec3(0.0f, 0.2f, 10.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -621,13 +637,13 @@ bool Update() {
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(-10.0f, 0.0f, -10.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
 			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
 			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
+			mLightsShader->setFloat("transparency", 0.9f);
 			botella_vidrio->Draw(*mLightsShader);
 			//glUseProgram(0);
 
@@ -635,13 +651,13 @@ bool Update() {
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(-5.0f, 0.0f, -5.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
 			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
 			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
+			mLightsShader->setFloat("transparency", 0.8f);
 			botella_plastico->Draw(*mLightsShader);
 			//glUseProgram(0);
 
@@ -661,9 +677,9 @@ bool Update() {
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 3.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::translate(model, glm::vec3(-3.0f, -0.1f, 3.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -675,9 +691,9 @@ bool Update() {
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-5.0f, 0.0f, -5.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::translate(model, glm::vec3(0.0f, 0.15f, -5.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -703,7 +719,7 @@ bool Update() {
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(-12.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
 			mLightsShader->setMat4("model", model);
 			// Aplicamos propiedades materiales
 			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
@@ -1013,7 +1029,7 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime*10.0);
+		camera.ProcessKeyboard(FORWARD, deltaTime*2.0);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		camera.ProcessKeyboard(BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
