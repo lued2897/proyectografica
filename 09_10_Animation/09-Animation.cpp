@@ -99,7 +99,7 @@ Model* particleModel;
 // Carga la información del modelo
 Model	*terrain;
 Model	*decor;
-Model   *door;
+Model   *boat;
 Model   *moon;
 Model   *gridMesh;
 
@@ -181,6 +181,22 @@ int main()
 
 }
 
+glm::vec3 trebol(glm::vec3 translate,float time, float radius, float height) {
+	float t = time;
+
+	// Nudo de trébol
+	float x = -1 * (sin(t) + 2.0 * sin(2.0 * t));
+	float y = -1 * (cos(t) - 2.0 * cos(2.0 * t));
+	//float z = -sin(3.0 * t);
+
+	translate[0] += radius * x;
+	translate[2] += radius * y;
+	//PosL.z += height * z;
+	translate[1] += height;
+	
+	return translate;
+}
+
 bool Start() {
 	// Inicialización de GLFW
 
@@ -230,9 +246,9 @@ bool Start() {
 
 	/*house = new Model("models/IllumModels/House03.fbx");*/
 	//house = new Model("models/rocks_w_corals.fbx");
-	terrain = new Model("models/plane.fbx");
-	decor = new Model("models/plane.fbx");
-	door = new Model("models/boat.fbx");
+	terrain = new Model("models/scene_static_models.fbx");
+	//decor = new Model("models/decor.fbx");
+	//boat = new Model("models/boat.fbx");
 	moon = new Model("models/IllumModels/moon.fbx");
 	gridMesh = new Model("models/IllumModels/grid.fbx");
 	std::cout << "Cofre lalo" << std::endl;
@@ -242,7 +258,7 @@ bool Start() {
 	// ---------------------------------- Pariculas ----------------------------------
 	particlesShader = new Shader("shaders/13_particles.vs", "shaders/13_particles.fs");
 	
-	particleModel = new Model("modelsP/Burbuja1.fbx");
+	particleModel = new Model("models/Burbuja1.fbx");
 	// ---------------------------------- Pariculas ----------------------------------
 
 	
@@ -269,7 +285,7 @@ bool Start() {
 		botella_plastico = new Model("models/botellaplastico.fbx");
 		std::cout << "10" << std::endl;
 		std::cout << "Termina basura" << std::endl;
-		cofre = new Model("models/cofreahorasi.fbx");
+		//cofre = new Model("models/cofreahorasi.fbx");
 	}
 	
 	{//Animales
@@ -431,30 +447,30 @@ bool Update() {
 				particlesShader->use();
 				particlesShader->setMat4("projection", projection);
 				particlesShader->setMat4("view", view);
-			
+
 				// Activamos para objetos transparentes
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				glm::mat4 model;
-			
+
 				for (int psc = 0; psc < particlesSystem.particles.size(); psc++) {
 					Particle p_i = particlesSystem.particles.at(psc);
-			
+
 					// Aplicamos transformaciones del modelo
 					model = glm::mat4(1.0f);
 					model = glm::translate(model, p_i.position); // translate it down so it's at the center of the scene
 					model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 					model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
-			
+
 					particlesShader->setMat4("model", model);
-			
+
 					// Dibujamos el modelo
 					particleModel->Draw(*particlesShader);
 				}
-				
+
 			}
 
-			
+
 			mLightsShader->use();
 
 			// Activamos para objetos transparentes
@@ -494,14 +510,15 @@ bool Update() {
 			mLightsShader->setVec3("cameraPos", camera.Position);
 			mLightsShader->setFloat("time", glfwGetTime());
 			mLightsShader->setFloat("waterLevel", 0.0f); // adjust if needed
-			mLightsShader->setFloat("fogDensity", 0.04f);
-			mLightsShader->setFloat("depthAttenuation", 0.06f);
+			mLightsShader->setFloat("fogDensity", 0.03f);
+			mLightsShader->setFloat("depthAttenuation", 0.006f);
 			mLightsShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 
 
 
 			terrain->Draw(*mLightsShader);
-			//decor->Draw(*mLightsShader
+			//decor->Draw(*mLightsShader);
+			//boat->Draw(*mLightsShader);
 			//glUseProgram(0);
 			
 			//chest->Draw(*mLightsShader);
@@ -628,19 +645,19 @@ bool Update() {
 			botella_plastico->Draw(*mLightsShader);
 			//glUseProgram(0);
 
-			//mLightsShader->use();
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(3.0f, 0.0f, -3.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-			mLightsShader->setMat4("model", model);
-			// Aplicamos propiedades materiales
-			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
-			tortuga->Draw(*mLightsShader);
-			//glUseProgram(0);
+			////mLightsShader->use();
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(3.0f, 0.0f, -3.0f)); // translate it down so it's at the center of the scene
+			//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			//mLightsShader->setMat4("model", model);
+			//// Aplicamos propiedades materiales
+			//mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			//mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			//mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			//mLightsShader->setFloat("transparency", material01.transparency);
+			//tortuga->Draw(*mLightsShader);
+			////glUseProgram(0);
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
@@ -669,18 +686,18 @@ bool Update() {
 			mLightsShader->setFloat("transparency", material01.transparency);
 			cigarro->Draw(*mLightsShader);
 
-			//mLightsShader->use();
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-9.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(2.0f, 0.9f, 0.8f));	// it's a bit too big for our scene, so scale it down
-			mLightsShader->setMat4("model", model);
-			// Aplicamos propiedades materiales
-			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
-			cofre->Draw(*mLightsShader);
+			////mLightsShader->use();
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(-9.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			//model = glm::scale(model, glm::vec3(2.0f, 0.9f, 0.8f));	// it's a bit too big for our scene, so scale it down
+			//mLightsShader->setMat4("model", model);
+			//// Aplicamos propiedades materiales
+			//mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			//mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			//mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			//mLightsShader->setFloat("transparency", material01.transparency);
+			//cofre->Draw(*mLightsShader);
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);
@@ -727,10 +744,9 @@ bool Update() {
 			proceduralShader->setFloat("height", 20.0f);
 
 			//moon->Draw(*proceduralShader);
-			burbuja1->Draw(*proceduralShader);
-			burbuja2->Draw(*proceduralShader);
+			tortuga->Draw(*proceduralShader);
 
-			proceduralTime += 0.0001;
+			
 
 		}
 
@@ -772,7 +788,7 @@ bool Update() {
 
 		// Objeto animado
 
-		{
+		{	
 			character01->UpdateAnimation(deltaTime);
 			//pez->UpdateAnimation(deltaTime);
 			//tortuga->UpdateAnimation(deltaTime);
@@ -799,8 +815,18 @@ bool Update() {
 
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
 
+			dynamicShader->setVec3("cameraPos", camera.Position);
+			dynamicShader->setVec3("lightDir", glm::vec3(1.0f, 0.0f, 0.0f));
+			dynamicShader->setVec3("lightColor", glm::vec3(1.0f));
+			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.4f, 0.6f)); // ejemplo azul
+			dynamicShader->setFloat("fogDensity", 0.02f);
+			dynamicShader->setFloat("time", glfwGetTime());
+			dynamicShader->setInt("texture_diffuse1", 0);
+			dynamicShader->setInt("causticsTex", 1);
+
+
 			// Dibujamos el modelo
-			character01->Draw(*dynamicShader);
+			//character01->Draw(*dynamicShader);
 
 			/*AnimatedModel* pez;
 			AnimatedModel* tortuga;
@@ -812,9 +838,9 @@ bool Update() {
 			AnimatedModel* caballito;
 			AnimatedModel* delfin;
 			AnimatedModel* cangrejo;*/
-
+			w
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
-			character01->Draw(*dynamicShader);
+			//character01->Draw(*dynamicShader);
 			glUseProgram(0);
 
 
@@ -823,7 +849,8 @@ bool Update() {
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			glm::vec3 translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 1.0, 1.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(1.001f, 1.001f, 1.001f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
@@ -832,11 +859,17 @@ bool Update() {
 			glUseProgram(0);
 
 			pez->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 5.0f);
+			dynamicShader->setFloat("height", 10.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			translate = trebol(glm::vec3(0.0f, 1.0f, 0.0f), proceduralTime, 10.0, 10.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
@@ -845,11 +878,17 @@ bool Update() {
 			glUseProgram(0);
 
 			cangrejo->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 2.0f);
+			dynamicShader->setFloat("height", 1.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			translate = trebol(glm::vec3(0.0f, 0.0f, 0.0f), proceduralTime, 1.0, 0.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
@@ -858,11 +897,17 @@ bool Update() {
 			glUseProgram(0);
 
 			medusa->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 25.0f);
+			dynamicShader->setFloat("height", 15.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 15.0, 8.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
@@ -871,12 +916,18 @@ bool Update() {
 			glUseProgram(0);
 
 			pulpo->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 8.0f);
+			dynamicShader->setFloat("height", 10.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(3.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 12.0, 6.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
@@ -884,12 +935,18 @@ bool Update() {
 			glUseProgram(0);
 
 			calamar->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 35.0f);
+			dynamicShader->setFloat("height", 7.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-6.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 20.0, 16.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
@@ -897,24 +954,36 @@ bool Update() {
 			glUseProgram(0);
 
 			mantaraya->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 40.0f);
+			dynamicShader->setFloat("height", 5.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(6.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
+			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 12.0, 16.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, mantaraya->gBones);
 			mantaraya->Draw(*dynamicShader);
 			glUseProgram(0);
 
 			delfin->UpdateAnimation(deltaTime);
+
+			/*dynamicShader->setFloat("time", proceduralTime);
+			dynamicShader->setFloat("radius", 20.0f);
+			dynamicShader->setFloat("height", 3.0f);*/
+
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-9.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 5.0, 7.0);
+			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
@@ -922,7 +991,7 @@ bool Update() {
 			delfin->Draw(*dynamicShader);
 			glUseProgram(0);
 
-
+			proceduralTime += 0.0001;
 		}
 
 

@@ -90,7 +90,7 @@ void main()
         // --- Apply caustics pattern in world space ---
         //float caustics = causticPattern(vec3(worldPos.xz, 0.0) * 0.15, time);
         float caustics = causticPattern(worldPos * 0.15, time);
-        baseColor.rgb += vec3(caustics) * 0.25;
+        baseColor.rgb += vec3(caustics) * 0.05;
 
         // --- Optional: make caustics fade with depth ---
         float depth = clamp((waterLevel - worldPos.y) * depthAttenuation, 0.0, 1.0);

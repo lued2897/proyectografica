@@ -11,19 +11,25 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-uniform float time;
-uniform float radius;
-uniform float height;
+uniform float time = 0.0;
+uniform float radius = 0.0;
+uniform float height = 0.0;
 
 void main()
 {
-    
-    vec4 PosL = vec4(aPos, 1.0f);
-    PosL.x += radius * cos(time);
-    PosL.y += radius * sin(time);
-    PosL.z += height * cos(time);
+    float t = time;
+
+    // Nudo de trébol
+    float x = -1*(sin(t) + 2.0 * sin(2.0 * t));
+    float y = -1*(cos(t) - 2.0 * cos(2.0 * t));
+    //float z = -sin(3.0 * t);
+
+    vec4 PosL = vec4(aPos, 1.0);
+    PosL.x += radius * x;
+    PosL.y += radius * y;
+    //PosL.z += height * z;
+    PosL.z += height;
 
     gl_Position = projection * view * model * PosL;
-
-    TexCoords = aTexCoords;  
+    TexCoords = aTexCoords;
 }
