@@ -247,7 +247,7 @@ bool Start() {
 	/*house = new Model("models/IllumModels/House03.fbx");*/
 	//house = new Model("models/rocks_w_corals.fbx");
 	terrain = new Model("models/scene_static_models.fbx");
-	//decor = new Model("models/decor.fbx");
+	decor = new Model("models/decor.fbx");
 	//boat = new Model("models/boat.fbx");
 	moon = new Model("models/IllumModels/moon.fbx");
 	gridMesh = new Model("models/IllumModels/grid.fbx");
@@ -517,7 +517,7 @@ bool Update() {
 
 
 			terrain->Draw(*mLightsShader);
-			//decor->Draw(*mLightsShader);
+			decor->Draw(*mLightsShader);
 			//boat->Draw(*mLightsShader);
 			//glUseProgram(0);
 			
@@ -838,7 +838,6 @@ bool Update() {
 			AnimatedModel* caballito;
 			AnimatedModel* delfin;
 			AnimatedModel* cangrejo;*/
-			w
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
 			//character01->Draw(*dynamicShader);
 			glUseProgram(0);
