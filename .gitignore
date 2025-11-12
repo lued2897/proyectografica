@@ -49,3 +49,8 @@ dll
 
 *.vcxproj
 
+*.log
+*.tlog
+*.idb
+
+09_10_Animation\Project1\Project1\x64

@@ -55,6 +55,7 @@ Camera camera3rd(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+bool submarino = true;
 
 // Variables para la velocidad de reproducción
 // de la animación
@@ -70,6 +71,13 @@ float     rotateCharacter = 0.0f;
 float	  door_offset = 0.0f;
 float	  door_rotation = 0.0f;
 
+//variables para efecto bajo el agua
+float		water_level = 5.0f;
+float		fog_density = 0.04f;
+float		depth_attnuation = 0.06;
+glm::vec3	water_color = glm::vec3(0.0f, 0.25f, 0.45f);
+
+
 // Shaders
 Shader *mLightsShader;
 Shader *proceduralShader;
@@ -79,10 +87,24 @@ Shader *cubemapShader;
 Shader *dynamicShader;
 
 // Carga la información del modelo
-Model	*house;
+Model	*terrain;
+Model	*decor;
 Model   *door;
 Model   *moon;
 Model   *gridMesh;
+Model	*chest;
+//animales
+//basura
+Model *bolsa;
+Model *tenedor;
+Model *cuchara;
+Model *tapa;
+Model *lata;
+Model *popote;
+Model *cigarro;
+Model *plato;
+Model *botella_vidrio;
+Model *botella_plastico;
 
 // Modelos animados
 AnimatedModel   *character01;
@@ -174,12 +196,44 @@ bool Start() {
 	// Dibujar en malla de alambre
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
-	house = new Model("models/IllumModels/House03.fbx");
-	door = new Model("models/IllumModels/Door.fbx");
+	/*house = new Model("models/IllumModels/House03.fbx");*/
+	//house = new Model("models/rocks_w_corals.fbx");
+	terrain = new Model("models/plane.fbx");
+	decor = new Model("models/plane.fbx");
+	door = new Model("models/boat.fbx");
 	moon = new Model("models/IllumModels/moon.fbx");
 	gridMesh = new Model("models/IllumModels/grid.fbx");
+	std::cout << "Cofre lalo" << std::endl;
+	//chest = new Model("models/untitled.fbx");
+	std::cout << "Fin Cofre lalo" << std::endl;
 
-	character01 = new AnimatedModel("models/IllumModels/KAYA.fbx");
+	
+	{//basura
+		std::cout << "Carga basura" << std::endl;
+		bolsa = new Model("models/bolsaBasuraMejorada.fbx");
+		std::cout << "1" << std::endl;
+		tenedor = new Model("models/FORK.fbx");
+		std::cout << "2" << std::endl;
+		//cuchara = new Model("models/Cuchara.fbx");
+		std::cout << "3" << std::endl;
+		tapa = new Model("models/Tapa_dorada.fbx");
+		std::cout << "4" << std::endl;
+		lata = new Model("models/lata.fbx");
+		std::cout << "5" << std::endl;
+		popote = new Model("models/popote.fbx");
+		std::cout << "6" << std::endl;
+		cigarro = new Model("models/cigarro.fbx");
+		std::cout << "7" << std::endl;
+		plato = new Model("models/PLATE.fbx");
+		std::cout << "8" << std::endl;
+		//botella_vidrio = new Model("models/botelladevino.fbx");
+		std::cout << "9" << std::endl;
+		botella_plastico = new Model("models/botellaplastico.fbx");
+		std::cout << "10" << std::endl;
+		std::cout << "Termina basura" << std::endl;
+	}
+
+	character01 = new AnimatedModel("models/ray_merged.fbx");
 
 	// Cubemap
 	vector<std::string> faces
@@ -284,160 +338,181 @@ bool Update() {
 		view = camera3rd.GetViewMatrix();
 	}
 
+	
 	// Cubemap (fondo)
 	{
 		mainCubeMap->drawCubeMap(*cubemapShader, projection, view);
 	}
-	
-	 {
-		mLightsShader->use();
+	if (submarino) {
 
-		// Activamos para objetos transparentes
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		
-		mLightsShader->setMat4("projection", projection);
-		mLightsShader->setMat4("view", view);
+		{
+			mLightsShader->use();
 
-		// Aplicamos transformaciones del modelo
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-		mLightsShader->setMat4("model", model);
+			// Activamos para objetos transparentes
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Configuramos propiedades de fuentes de luz
-		mLightsShader->setInt("numLights", (int)gLights.size());
-		for (size_t i = 0; i < gLights.size(); ++i) {
-			SetLightUniformVec3(mLightsShader, "Position", i, gLights[i].Position);
-			SetLightUniformVec3(mLightsShader, "Direction", i, gLights[i].Direction);
-			SetLightUniformVec4(mLightsShader, "Color", i, gLights[i].Color);
-			SetLightUniformVec4(mLightsShader, "Power", i, gLights[i].Power);
-			SetLightUniformInt(mLightsShader, "alphaIndex", i, gLights[i].alphaIndex);
-			SetLightUniformFloat(mLightsShader, "distance", i, gLights[i].distance);
+			mLightsShader->setMat4("projection", projection);
+			mLightsShader->setMat4("view", view);
+
+			// Aplicamos transformaciones del modelo
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+
+			// Configuramos propiedades de fuentes de luz
+			mLightsShader->setInt("numLights", (int)gLights.size());
+			for (size_t i = 0; i < gLights.size(); ++i) {
+				SetLightUniformVec3(mLightsShader, "Position", i, gLights[i].Position);
+				SetLightUniformVec3(mLightsShader, "Direction", i, gLights[i].Direction);
+				SetLightUniformVec4(mLightsShader, "Color", i, gLights[i].Color);
+				SetLightUniformVec4(mLightsShader, "Power", i, gLights[i].Power);
+				SetLightUniformInt(mLightsShader, "alphaIndex", i, gLights[i].alphaIndex);
+				SetLightUniformFloat(mLightsShader, "distance", i, gLights[i].distance);
+			}
+
+			mLightsShader->setVec3("eye", camera.Position);
+
+			// Aplicamos propiedades materiales
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+
+			// parametros para efecto de agua
+			mLightsShader->setVec3("cameraPos", camera.Position);
+			mLightsShader->setFloat("time", glfwGetTime());
+			mLightsShader->setFloat("waterLevel", 0.0f); // adjust if needed
+			mLightsShader->setFloat("fogDensity", 0.04f);
+			mLightsShader->setFloat("depthAttenuation", 0.06f);
+			mLightsShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+
+
+
+			terrain->Draw(*mLightsShader);
+			//decor->Draw(*mLightsShader
+			//chest->Draw(*mLightsShader);
+
+
+			//dibuja basura
+
+
+			model = glm::mat4(1.0f);
+
+			// Actividad 5.1
+			// Efecto de puerta corrediza
+			model = glm::translate(model, glm::vec3(0.418f + door_offset, 0.0f, 6.75f));
+
+			// Efecto de puerta con bisagra
+			model = glm::rotate(model, glm::radians(door_rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			mLightsShader->setMat4("model", model);
+			door->Draw(*mLightsShader);
 		}
-		
-		mLightsShader->setVec3("eye", camera.Position);
 
-		// Aplicamos propiedades materiales
-		mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-		mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-		mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-		mLightsShader->setFloat("transparency", material01.transparency);
+		glUseProgram(0);
 
-		house->Draw(*mLightsShader);
 
-		model = glm::mat4(1.0f);
+		// Actividad 5.2
 
-		// Actividad 5.1
-		// Efecto de puerta corrediza
-		model = glm::translate(model, glm::vec3(0.418f + door_offset, 0.0f, 6.75f));
-		
-		// Efecto de puerta con bisagra
-		model = glm::rotate(model, glm::radians(door_rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+		{
+			// Activamos el shader de Phong
+			proceduralShader->use();
 
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		mLightsShader->setMat4("model", model);
-		door->Draw(*mLightsShader);
+			// Activamos para objetos transparentes
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			// Aplicamos transformaciones de proyección y cámara (si las hubiera)
+			proceduralShader->setMat4("projection", projection);
+			proceduralShader->setMat4("view", view);
+
+			// Aplicamos transformaciones del modelo
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+			proceduralShader->setMat4("model", model);
+
+			proceduralShader->setFloat("time", proceduralTime);
+			proceduralShader->setFloat("radius", 20.0f);
+			proceduralShader->setFloat("height", 20.0f);
+
+			moon->Draw(*proceduralShader);
+			proceduralTime += 0.0001;
+
+		}
+
+		glUseProgram(0);
+
+
+		// Actividad 5.3
+		//
+		//{
+		//	// Activamos el shader de Phong
+		//	wavesShader->use();
+
+		//	// Activamos para objetos transparentes
+		//	glEnable(GL_BLEND);
+		//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		//	// Aplicamos transformaciones de proyección y cámara (si las hubiera)
+		//	wavesShader->setMat4("projection", projection);
+		//	wavesShader->setMat4("view", view);
+
+		//	// Aplicamos transformaciones del modelo
+		//	glm::mat4 model = glm::mat4(1.0f);
+		//	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+		//	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//	model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+		//	wavesShader->setMat4("model", model);
+
+		//	wavesShader->setFloat("time", wavesTime);
+		//	wavesShader->setFloat("radius", 5.0f);
+		//	wavesShader->setFloat("height", 5.0f);
+
+		//	gridMesh->Draw(*wavesShader);
+		//	wavesTime += 0.01;
+
+		//}
+
+		//glUseProgram(0);
+		//
+
+		// Objeto animado
+
+		{
+			character01->UpdateAnimation(deltaTime);
+
+			// Activación del shader del personaje
+			dynamicShader->use();
+
+			// Aplicamos transformaciones de proyección y cámara (si las hubiera)
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+
+			// Aplicamos transformaciones del modelo
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f)); // translate it down so it's at the center of the scene
+			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+
+			dynamicShader->setMat4("model", model);
+
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
+
+			// Dibujamos el modelo
+			character01->Draw(*dynamicShader);
+		}
+
+
+		glUseProgram(0);
+
 	}
-
-	glUseProgram(0);
-
-
-	// Actividad 5.2
-	
-	{
-		// Activamos el shader de Phong
-		proceduralShader->use();
-
-		// Activamos para objetos transparentes
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// Aplicamos transformaciones de proyección y cámara (si las hubiera)
-		proceduralShader->setMat4("projection", projection);
-		proceduralShader->setMat4("view", view);
-
-		// Aplicamos transformaciones del modelo
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-		proceduralShader->setMat4("model", model);
-
-		proceduralShader->setFloat("time", proceduralTime);
-		proceduralShader->setFloat("radius", 20.0f);
-		proceduralShader->setFloat("height", 20.0f);
-
-		moon->Draw(*proceduralShader);
-		proceduralTime += 0.0001;
-
-	}
-
-	glUseProgram(0);
-	
-
-	// Actividad 5.3
-	//
-	//{
-	//	// Activamos el shader de Phong
-	//	wavesShader->use();
-
-	//	// Activamos para objetos transparentes
-	//	glEnable(GL_BLEND);
-	//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	//	// Aplicamos transformaciones de proyección y cámara (si las hubiera)
-	//	wavesShader->setMat4("projection", projection);
-	//	wavesShader->setMat4("view", view);
-
-	//	// Aplicamos transformaciones del modelo
-	//	glm::mat4 model = glm::mat4(1.0f);
-	//	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-	//	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//	model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-	//	wavesShader->setMat4("model", model);
-
-	//	wavesShader->setFloat("time", wavesTime);
-	//	wavesShader->setFloat("radius", 5.0f);
-	//	wavesShader->setFloat("height", 5.0f);
-
-	//	gridMesh->Draw(*wavesShader);
-	//	wavesTime += 0.01;
-
-	//}
-
-	//glUseProgram(0);
-	//
-	
-	// Objeto animado
-	
-	//{
-	//	character01->UpdateAnimation(deltaTime);
-
-	//	// Activación del shader del personaje
-	//	dynamicShader->use();
-
-	//	// Aplicamos transformaciones de proyección y cámara (si las hubiera)
-	//	dynamicShader->setMat4("projection", projection);
-	//	dynamicShader->setMat4("view", view);
-
-	//	// Aplicamos transformaciones del modelo
-	//	glm::mat4 model = glm::mat4(1.0f);
-	//	model = glm::translate(model, position); // translate it down so it's at the center of the scene
-	//	model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-	//	model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
-
-	//	dynamicShader->setMat4("model", model);
-
-	//	dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
-
-	//	// Dibujamos el modelo
-	//	character01->Draw(*dynamicShader);
-	//}
-	
-
-	glUseProgram(0); 
+	 
 
 	// glfw: swap buffers 
 	glfwSwapBuffers(window);
@@ -468,9 +543,9 @@ void processInput(GLFWwindow* window)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
 	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
-		door_offset += 0.01f;
+		submarino = true;
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		door_offset -= 0.01f;
+		submarino = false;
 	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
 		door_rotation += 0.1f;
 	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
