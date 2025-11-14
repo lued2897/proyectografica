@@ -831,14 +831,14 @@ bool Update() {
 
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
 
+			// parametros para efecto de agua
 			dynamicShader->setVec3("cameraPos", camera.Position);
-			dynamicShader->setVec3("lightDir", glm::vec3(1.0f, 0.0f, 0.0f));
-			dynamicShader->setVec3("lightColor", glm::vec3(1.0f));
-			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.4f, 0.6f)); // ejemplo azul
-			dynamicShader->setFloat("fogDensity", 0.02f);
 			dynamicShader->setFloat("time", glfwGetTime());
-			dynamicShader->setInt("texture_diffuse1", 0);
-			dynamicShader->setInt("causticsTex", 1);
+			dynamicShader->setFloat("waterLevel", 0.0f); // adjust if needed
+			dynamicShader->setFloat("fogDensity", 0.03f);
+			dynamicShader->setFloat("depthAttenuation", 0.006f);
+			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+
 
 
 			// Dibujamos el modelo
@@ -958,6 +958,8 @@ bool Update() {
 			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
+
+
 			model = glm::mat4(1.0f);
 			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 20.0, 16.0);
 			model = glm::translate(model, translate); // translate it down so it's at the center of the scene

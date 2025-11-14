@@ -52,5 +52,6 @@ dll
 *.log
 *.tlog
 *.idb
+*.zip
 
 09_10_Animation\Project1\Project1\x64

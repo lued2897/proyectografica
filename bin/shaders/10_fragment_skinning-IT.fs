@@ -4,12 +4,36 @@ out vec4 FragColor;
 in vec2 TexCoords;
 in vec3 ex_N; 
 in vec3 EyeDirection_cameraspace;
+in vec3 vertexPosition_cameraspace;
 
 uniform sampler2D texture_diffuse1;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+
+
+// ----- Underwater uniforms -----
+uniform vec3 cameraPos;          // camera world-space position
+uniform vec3 fogColor = vec3(0.0, 0.25, 0.45);  // bluish tone
+uniform float fogDensity = 0.04;                // how fast it fades
+uniform float waterLevel = 0.0;                 // y = surface level
+uniform float depthAttenuation = 0.06;          // how dark it gets with depth
+uniform float time;
+uniform float transparency = 1.0;
+
+
+float causticPattern(vec3 pos, float t)
+    {
+        float wave1 = sin(pos.x * 4.0 + t * 2.0) * cos(pos.z * 4.0 + t * 2.5);
+        float wave2 = sin(pos.x * 3.3 - t * 1.7) * cos(pos.z * 5.1 - t * 2.3);
+        float wave3 = sin(pos.x * 6.7 + t * 1.9) * cos(pos.z * 3.5 + t * 2.8);
+    
+        float pattern = (wave1 + wave2 + wave3) / 3.0;
+        pattern = abs(pattern);
+        pattern = pow(pattern, 3.0);
+        return pattern;
+    }
 
 void main()
 {    
@@ -44,8 +68,33 @@ void main()
     // Cálculo de la componente especular
     vec4 MaterialSpecularColor =  vec4(1.0, 1.0, 1.0, 1.0) * LightPower * pow(cosAlpha,5);
 
+    //ex_color.a = transparency;
     vec4 texel = texture(texture_diffuse1, TexCoords);
+    vec4 baseColor =  texel * (MaterialAmbientColor + MaterialDiffuseColor + MaterialSpecularColor);
+
+
+     //Water effects
+        // --- World-space reconstruction (so caustics don't follow camera) ---
+        vec3 worldPos = (inverse(view) * vec4(vertexPosition_cameraspace, 1.0)).xyz;
+
+        // --- Apply caustics pattern in world space ---
+        //float caustics = causticPattern(vec3(worldPos.xz, 0.0) * 0.15, time);
+        float caustics = causticPattern(worldPos * 0.15, time);
+        baseColor.rgb += vec3(caustics) * 0.05;
+
+        // --- Optional: make caustics fade with depth ---
+        float depth = clamp((waterLevel - worldPos.y) * depthAttenuation, 0.0, 1.0);
+        baseColor.rgb *= mix(1.0, 0.5, depth);
+        baseColor.rgb += vec3(caustics) * 0.25 * (1.0 - depth);
+
+        // --- Fog (same as before) ---
+        float dist = length(cameraPos - worldPos);
+        float fogFactor = exp(-fogDensity * dist);
+        fogFactor = clamp(fogFactor, 0.0, 1.0);
+        vec3 finalColor = mix(fogColor, baseColor.rgb, fogFactor);
+    
 
     // FragColor = texel * (MaterialAmbientColor + MaterialDiffuseColor + MaterialSpecularColor);
-    FragColor = texel*( MaterialAmbientColor + MaterialDiffuseColor + MaterialSpecularColor);
+    //FragColor = finalColor*( MaterialAmbientColor + MaterialDiffuseColor + MaterialSpecularColor);
+    FragColor = vec4(finalColor, baseColor.a);
 }

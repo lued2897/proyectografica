@@ -21,6 +21,7 @@ uniform mat4 projection;
 uniform mat4 gBones[100];
 
 out vec3 EyeDirection_cameraspace;
+out vec3 vertexPosition_cameraspace;
 
 void main()
 {
@@ -45,7 +46,7 @@ void main()
     TexCoords = aTexCoords;    
     //gl_Position = projection * view * model * vec4(aPos, 1.0);
 
-    vec3 vertexPosition_cameraspace = ( view * model * vec4(aPos, 1.0)).xyz;
+    vertexPosition_cameraspace = ( view * model * vec4(aPos, 1.0)).xyz;
     EyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;
     ex_N = aNormal;
 }
