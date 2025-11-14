@@ -160,8 +160,12 @@ float wavesTime = 0.0f;
 // Audio
 ISoundEngine *SoundEngine = createIrrKlangDevice();
 
+//Cancion segun la escena
+ISound* currentMusic = nullptr; // canción actual
+
 // selección de cámara
 bool    activeCamera = 1; // activamos la primera cámara
+
 
 // Entrada a función principal
 int main()
@@ -195,6 +199,23 @@ glm::vec3 trebol(glm::vec3 translate,float time, float radius, float height) {
 	translate[1] += height;
 	
 	return translate;
+}
+
+
+//para cambiar la cancion
+
+std::string currentSceneMusic = "";
+void PlaySceneMusic(const char* filename) {
+	if (currentSceneMusic == filename) return; // ya está sonando, no reiniciar
+	if (currentMusic) {
+		currentMusic->stop(); // Detiene la canción anterior
+		currentMusic->drop(); // Libera recursos
+	}
+	currentMusic = SoundEngine->play2D(filename, true, false, true);
+	currentSceneMusic = filename;
+	if (!currentMusic) {
+		std::cout << "Error: no se pudo abrir la cancion de esta escena: " << filename << std::endl;
+	}
 }
 
 bool Start() {
@@ -361,7 +382,10 @@ bool Start() {
 	light04.Color = glm::vec4(0.2f, 0.2f, 0.0f, 1.0f);
 	gLights.push_back(light04);
 	
-	// SoundEngine->play2D("sound/EternalGarden.mp3", true);
+
+	// Reproduce la canción en loop
+	SoundEngine = createIrrKlangDevice();
+	SoundEngine->setSoundVolume(0.4f); // 50% volumen
 
 	return true;
 }
@@ -1012,8 +1036,11 @@ bool Update() {
 		}
 
 
-		
+		PlaySceneMusic("sounds/SusurrosdelMar.mp3"); // música submarina
 
+	}
+	else {
+		PlaySceneMusic("sounds/OlasdeSal.mp3"); // música playa
 	}
 	 
 
