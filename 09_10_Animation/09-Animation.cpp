@@ -288,7 +288,8 @@ bool Start() {
 	cubemapShader = new Shader("shaders/10_vertex_cubemap.vs", "shaders/10_fragment_cubemap.fs");
 	dynamicShader = new Shader("shaders/10_vertex_skinning-IT.vs", "shaders/10_fragment_skinning-IT.fs");
 
-	algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/13_algaAnimation.fs"); // Shader Animación de algas
+	//algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/13_algaAnimation.fs"); // Shader Animación de algas
+	algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/10_fragment_skinning-IT.fs");
 
 	// Máximo número de huesos: 100
 	dynamicShader->setBonesIDs(MAX_RIGGING_BONES);
@@ -951,31 +952,7 @@ bool Update() {
 
 		//	gridMesh->Draw(*wavesShader);
 		//	wavesTime += 0.01;
-			// ================== DIBUJAR ALGA 2D =====================
-		{
-			// Activamos el shader especial de animación 2D
-			algaShader->use();
-			// Habilitar transparencia
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			// Matrices del sistema
-			algaShader->setMat4("projection", projection);
-			algaShader->setMat4("view", view);
-			// Transformaciones del objeto
-			glm::mat4 modelAlga = glm::mat4(1.0f);
-			modelAlga = glm::translate(modelAlga, glm::vec3(0.0f, 0.0f, 0.0f));  // posición en la escena
-			modelAlga = glm::rotate(modelAlga, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));  // el plano apunta hacia la cámara
-			modelAlga = glm::scale(modelAlga, glm::vec3(2.0f, 2.0f, 2.0f));     // tamaño
-			algaShader->setMat4("model", modelAlga);
-			// Uniforms para animación
-			wavesTime += 0.02f;                      // velocidad de animación
-			algaShader->setFloat("time", wavesTime);
-			algaShader->setFloat("radius", 5.0f);
-			algaShader->setFloat("height", 5.0f);
-			// Dibujar el mesh subdividido
-			//gridMesh->Draw(*algaShader);
-			algaMesh->Draw(*algaShader);
-		}
+		
 
 		//}
 
@@ -1207,6 +1184,58 @@ bool Update() {
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
 			delfin->Draw(*dynamicShader);
 			//glUseProgram(0);
+
+			// ================== DIBUJAR ALGA 2D con iluminación =====================
+			{
+				// Activamos el shader especial de animación 2D
+				algaShader->use();
+
+				// Habilitar transparencia
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+				// Matrices del sistema
+				algaShader->setMat4("projection", projection);
+				algaShader->setMat4("view", view);
+
+				// Transformaciones del objeto
+				glm::mat4 modelAlga = glm::mat4(1.0f);
+				modelAlga = glm::translate(modelAlga, glm::vec3(0.0f, 0.0f, 0.0f));  // posición en la escena
+				modelAlga = glm::rotate(modelAlga, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // el plano “de pie”
+				modelAlga = glm::scale(modelAlga, glm::vec3(0.6f, 0.6f, 0.6f));      // tamaño
+				algaShader->setMat4("model", modelAlga);
+
+				// --------- Iluminación (IGUAL que dynamicShader) ----------
+				algaShader->setInt("numLights", (int)gLights.size());
+				for (size_t i = 0; i < gLights.size(); ++i) {
+					SetLightUniformVec3(algaShader, "Position", i, gLights[i].Position);
+					SetLightUniformVec3(algaShader, "Direction", i, gLights[i].Direction);
+					SetLightUniformVec4(algaShader, "Color", i, gLights[i].Color);
+					SetLightUniformVec4(algaShader, "Power", i, gLights[i].Power);
+					SetLightUniformInt(algaShader, "alphaIndex", i, gLights[i].alphaIndex);
+					SetLightUniformFloat(algaShader, "distance", i, gLights[i].distance);
+				}
+
+				// Material
+				algaShader->setVec4("MaterialAmbientColor", material01.ambient);
+				algaShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+				algaShader->setVec4("MaterialSpecularColor", material01.specular);
+				algaShader->setFloat("transparency", material01.transparency);
+
+				// Parámetros de agua / niebla (como en dynamicShader)
+				algaShader->setVec3("cameraPos", camera.Position);
+				algaShader->setFloat("waterLevel", 0.0f);
+				algaShader->setFloat("fogDensity", 0.03f);
+				algaShader->setFloat("depthAttenuation", 0.0f);
+				algaShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+
+				// Uniform para la animación de la alga (vertex)
+				wavesTime += 0.05f;                // velocidad de animación
+				algaShader->setFloat("time", wavesTime);
+
+				// Dibujar el mesh 2D de la alga
+				algaMesh->Draw(*algaShader);
+			}
 
 			proceduralTime += 0.0001;
 		}

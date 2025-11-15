@@ -3,10 +3,10 @@
 C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(78,25): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
 C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(221,10): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(222,10): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(624,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1036,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1211,22): warning C4305: '+=': truncamiento de 'double' a 'float'
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1237,44): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(625,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1013,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1240,22): warning C4305: '+=': truncamiento de 'double' a 'float'
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1266,44): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 glad.lib(glad.obj) : warning LNK4099: no se encontró PDB 'glad.pdb' con 'glad.lib(glad.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glad.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
 glfw3.lib(init.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(init.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
 glfw3.lib(window.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(window.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
