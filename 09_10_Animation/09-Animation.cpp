@@ -98,6 +98,8 @@ Shader *wavesShader;
 Shader *cubemapShader;
 Shader *dynamicShader;
 
+Shader* algaShader; // Shader Animación de algas
+
 // ---------------------------------- Pariculas ----------------------------------
 Shader* particlesShader;
 // Partículas
@@ -118,6 +120,9 @@ Model   *gridMesh;
 Model	*chest;
 Model	*burbuja1;
 Model	*burbuja2;
+
+Model* alga3d;
+Model* algaMesh;
 
 
 // 
@@ -283,6 +288,8 @@ bool Start() {
 	cubemapShader = new Shader("shaders/10_vertex_cubemap.vs", "shaders/10_fragment_cubemap.fs");
 	dynamicShader = new Shader("shaders/10_vertex_skinning-IT.vs", "shaders/10_fragment_skinning-IT.fs");
 
+	algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/13_algaAnimation.fs"); // Shader Animación de algas
+
 	// Máximo número de huesos: 100
 	dynamicShader->setBonesIDs(MAX_RIGGING_BONES);
 
@@ -363,6 +370,8 @@ bool Start() {
 	{//etc
 		burbuja1 = new Model("models/Burbuja1.fbx");
 		burbuja2 = new Model("models/Burbuja2.fbx");
+		alga3d = new Model("models/Alga3D.fbx");
+		algaMesh = new Model("models/Alga2D.fbx");
 	}
 
 	character01 = new AnimatedModel("models/pezBien.fbx");
@@ -942,6 +951,31 @@ bool Update() {
 
 		//	gridMesh->Draw(*wavesShader);
 		//	wavesTime += 0.01;
+			// ================== DIBUJAR ALGA 2D =====================
+		{
+			// Activamos el shader especial de animación 2D
+			algaShader->use();
+			// Habilitar transparencia
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			// Matrices del sistema
+			algaShader->setMat4("projection", projection);
+			algaShader->setMat4("view", view);
+			// Transformaciones del objeto
+			glm::mat4 modelAlga = glm::mat4(1.0f);
+			modelAlga = glm::translate(modelAlga, glm::vec3(0.0f, 0.0f, 0.0f));  // posición en la escena
+			modelAlga = glm::rotate(modelAlga, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));  // el plano apunta hacia la cámara
+			modelAlga = glm::scale(modelAlga, glm::vec3(2.0f, 2.0f, 2.0f));     // tamaño
+			algaShader->setMat4("model", modelAlga);
+			// Uniforms para animación
+			wavesTime += 0.02f;                      // velocidad de animación
+			algaShader->setFloat("time", wavesTime);
+			algaShader->setFloat("radius", 5.0f);
+			algaShader->setFloat("height", 5.0f);
+			// Dibujar el mesh subdividido
+			//gridMesh->Draw(*algaShader);
+			algaMesh->Draw(*algaShader);
+		}
 
 		//}
 
