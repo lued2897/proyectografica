@@ -5,6 +5,8 @@ in vec2 TexCoords;
 in vec3 vertexPosition_cameraspace;
 in vec3 Normal_cameraspace;
 
+in vec3 WorldPos;
+
 uniform mat4 view;
 uniform sampler2D texture_diffuse1;
 
@@ -91,7 +93,8 @@ void main()
         vec4 baseColor = texel * ex_color;
 
         // --- World-space reconstruction (so caustics don't follow camera) ---
-        vec3 worldPos = (inverse(view) * vec4(vertexPosition_cameraspace, 1.0)).xyz;
+        //vec3 worldPos = (inverse(view) * vec4(vertexPosition_cameraspace, 1.0)).xyz;
+        vec3 worldPos = WorldPos;
 
         // --- Apply caustics pattern in world space ---
         //float caustics = causticPattern(vec3(worldPos.xz, 0.0) * 0.15, time);
@@ -108,7 +111,7 @@ void main()
         float fogFactor = exp(-fogDensity * dist);
         fogFactor = clamp(fogFactor, 0.0, 1.0);
         vec3 finalColor = mix(fogColor, baseColor.rgb, fogFactor);
-
+        //vec3 finalColor =baseColor.rgb;
         FragColor = vec4(finalColor, baseColor.a);
     
 }

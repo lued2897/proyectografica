@@ -561,7 +561,7 @@ bool Update() {
 			mLightsShader->setFloat("time", glfwGetTime());
 			mLightsShader->setFloat("waterLevel", 0.0f); // adjust if needed
 			mLightsShader->setFloat("fogDensity", 0.03f);
-			mLightsShader->setFloat("depthAttenuation", 0.006f);
+			mLightsShader->setFloat("depthAttenuation", 0.0f);
 			mLightsShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 
 
@@ -824,7 +824,7 @@ bool Update() {
 			proceduralShader->setVec3("cameraPos", camera.Position);
 			proceduralShader->setFloat("waterLevel", 0.0f); // adjust if needed
 			proceduralShader->setFloat("fogDensity", 0.03f);
-			proceduralShader->setFloat("depthAttenuation", 0.006f);
+			proceduralShader->setFloat("depthAttenuation", 0.0f);
 			proceduralShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 
 			proceduralShader->setFloat("time", proceduralTime);
@@ -928,7 +928,7 @@ bool Update() {
 			dynamicShader->setFloat("time", glfwGetTime());
 			dynamicShader->setFloat("waterLevel", 0.0f); // adjust if needed
 			dynamicShader->setFloat("fogDensity", 0.03f);
-			dynamicShader->setFloat("depthAttenuation", 0.006f);
+			dynamicShader->setFloat("depthAttenuation", 0.0f);
 			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 
 
@@ -1126,7 +1126,7 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime*2.0);
+		camera.ProcessKeyboard(FORWARD, deltaTime*5.0);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		camera.ProcessKeyboard(BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
