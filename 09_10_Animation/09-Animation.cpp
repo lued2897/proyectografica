@@ -975,21 +975,7 @@ bool Update() {
 
 		}
 
-		// Mostrar imagen de texto como overlay en pantalla completa
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		fullscreenShader->use();
-		glBindVertexArray(quadVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textTexture);
-		fullscreenShader->setInt("screenTexture", 0);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-
-		glDisable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
+		
 
 
 		// Actividad 5.2
@@ -1410,6 +1396,21 @@ bool Update() {
 
 			proceduralTime += 0.0001;
 		}
+		// Mostrar imagen de texto como overlay en pantalla completa
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		fullscreenShader->use();
+		glBindVertexArray(quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textTexture);
+		fullscreenShader->setInt("screenTexture", 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
 
 
 		PlaySceneMusic("sounds/SusurrosdelMar.mp3"); // música submarina

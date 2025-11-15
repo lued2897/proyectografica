@@ -6,12 +6,18 @@
 #include <modelstructs.h>
 #include <material.h>
 
+struct AABB {
+	glm::vec3 minExtent;
+	glm::vec3 maxExtent;
+};
+
 class Model 
 {
 public:
     /*  Model Data */
     vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh> meshes;
+	std::vector<AABB> aabbs;
     string directory;
     bool gammaCorrection;
 
@@ -81,6 +87,36 @@ public:
 		cout << "Animation framerate:" << pAnimation->mTicksPerSecond << " fps" << endl;
 
 		return  pAnimation->mTicksPerSecond;
+	}
+	void calculateAABB() {
+		//std::vector<AABB> aabbs;
+		int i = 0;
+		/*aabbs.minExtent = glm::vec3(std::numeric_limits<float>::max());
+		aabbs.maxExtent = glm::vec3(std::numeric_limits<float>::lowest());*/
+		for (const auto& mesh : meshes) {
+			aabbs[i].minExtent = glm::vec3(std::numeric_limits<float>::max());
+			aabbs[i].maxExtent = glm::vec3(std::numeric_limits<float>::lowest());
+			for (const auto& vertex : mesh.vertices) {
+				aabbs[i].minExtent.x = std::min(aabbs[i].minExtent.x, vertex.Position.x);
+				aabbs[i].minExtent.y = std::min(aabbs[i].minExtent.y, vertex.Position.y);
+				aabbs[i].minExtent.z = std::min(aabbs[i].minExtent.z, vertex.Position.z);
+
+				aabbs[i].maxExtent.x = std::max(aabbs[i].maxExtent.x, vertex.Position.x);
+				aabbs[i].maxExtent.y = std::max(aabbs[i].maxExtent.y, vertex.Position.y);
+				aabbs[i].maxExtent.z = std::max(aabbs[i].maxExtent.z, vertex.Position.z);
+			}
+			i = i + 1;
+		}
+		for (const auto& aabb : aabbs) {
+			cout << "bounding box=:" << aabb.maxExtent.x << ","
+				<< aabb.maxExtent.y << ","
+				<< aabb.maxExtent.z << "     " 
+				<< aabb.minExtent.x << ","
+				<< aabb.minExtent.y << ","
+				<< aabb.minExtent.z
+				<< endl;
+		}
+		//return aabbs;
 	}
 
 private:
