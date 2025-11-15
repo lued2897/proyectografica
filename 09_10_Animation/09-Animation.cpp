@@ -90,6 +90,10 @@ bool draw_botella_vidrio = true;
 bool draw_botella_plastico = true;
 bool draw_cigarro = true;
 
+//Generación de algas aleatorias
+const int NUM_ALGAS = 200;
+std::vector<glm::vec3> algaPositions;
+
 // Shaders
 Shader *mLightsShader;
 Shader *proceduralShader;
@@ -103,7 +107,7 @@ Shader* algaShader; // Shader Animación de algas
 // ---------------------------------- Pariculas ----------------------------------
 Shader* particlesShader;
 // Partículas
-Particles particlesSystem(500); // creamos 200 partículas
+Particles particlesSystem(7wwwwww00); // creamos 200 partículas
 
 // Carga la información del modelo
 Model* particleModel;
@@ -311,7 +315,7 @@ bool Start() {
 	// ---------------------------------- Pariculas ----------------------------------
 	particlesShader = new Shader("shaders/13_particles.vs", "shaders/13_particles.fs");
 	
-	particleModel = new Model("models/Burbuja1.fbx");
+	particleModel = new Model("models/Burbuja1Low.fbx");
 	// ---------------------------------- Pariculas ----------------------------------
 
 	
@@ -423,9 +427,22 @@ bool Start() {
 	SoundEngine = createIrrKlangDevice();
 	SoundEngine->setSoundVolume(0.4f); // 50% volumen
 
+	// ------------------ Posiciones aleatorias para las algas ------------------
+	srand(1234); // semilla fija para que siempre salgan igual (si quieres)
+
+	algaPositions.reserve(NUM_ALGAS);
+	for (int i = 0; i < NUM_ALGAS; ++i)
+	{
+		float x = -60.0f + static_cast<float>(rand()) / RAND_MAX * 120.0f; // [-60, 60]
+		float z = -60.0f + static_cast<float>(rand()) / RAND_MAX * 120.0f; // [-60, 60]
+		float y = 0.0f;                                                     // piso
+
+		algaPositions.push_back(glm::vec3(x, y, z));
+	}
+
 	return true;
 }
-
+//final Start
 
 void SetLightUniformInt(Shader* shader, const char* propertyName, size_t lightIndex, int value) {
 	std::ostringstream ss;
@@ -1185,27 +1202,18 @@ bool Update() {
 			delfin->Draw(*dynamicShader);
 			//glUseProgram(0);
 
-			// ================== DIBUJAR ALGA 2D con iluminación =====================
+			// ================== DIBUJAR ALGAS 2D con iluminación =====================
 			{
-				// Activamos el shader especial de animación 2D
 				algaShader->use();
 
-				// Habilitar transparencia
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-				// Matrices del sistema
+				// Matrices de proyección y vista (iguales para todas)
 				algaShader->setMat4("projection", projection);
 				algaShader->setMat4("view", view);
 
-				// Transformaciones del objeto
-				glm::mat4 modelAlga = glm::mat4(1.0f);
-				modelAlga = glm::translate(modelAlga, glm::vec3(0.0f, 0.0f, 0.0f));  // posición en la escena
-				modelAlga = glm::rotate(modelAlga, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // el plano “de pie”
-				modelAlga = glm::scale(modelAlga, glm::vec3(0.6f, 0.6f, 0.6f));      // tamaño
-				algaShader->setMat4("model", modelAlga);
-
-				// --------- Iluminación (IGUAL que dynamicShader) ----------
+				// --------- Iluminación (igual que con dynamicShader) ----------
 				algaShader->setInt("numLights", (int)gLights.size());
 				for (size_t i = 0; i < gLights.size(); ++i) {
 					SetLightUniformVec3(algaShader, "Position", i, gLights[i].Position);
@@ -1222,19 +1230,36 @@ bool Update() {
 				algaShader->setVec4("MaterialSpecularColor", material01.specular);
 				algaShader->setFloat("transparency", material01.transparency);
 
-				// Parámetros de agua / niebla (como en dynamicShader)
+				// Agua / niebla
 				algaShader->setVec3("cameraPos", camera.Position);
 				algaShader->setFloat("waterLevel", 0.0f);
 				algaShader->setFloat("fogDensity", 0.03f);
 				algaShader->setFloat("depthAttenuation", 0.0f);
 				algaShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 
-				// Uniform para la animación de la alga (vertex)
-				wavesTime += 0.05f;                // velocidad de animación
+				// Tiempo para la animación de las algas
+				wavesTime += 0.05f;
 				algaShader->setFloat("time", wavesTime);
 
-				// Dibujar el mesh 2D de la alga
-				algaMesh->Draw(*algaShader);
+				// --------- Dibujar las 50 algas ---------
+				for (int i = 0; i < NUM_ALGAS; ++i)
+				{
+					glm::mat4 modelAlga = glm::mat4(1.0f);
+
+					// Posición en el piso dentro del cuadrado [-60,60]x[-60,60]
+					modelAlga = glm::translate(modelAlga, algaPositions[i]);
+
+					// Poner el plano “de pie”, igual que antes
+					modelAlga = glm::rotate(modelAlga,
+						glm::radians(-90.0f),
+						glm::vec3(1.0f, 0.0f, 0.0f));
+
+					// Escala (ajusta si las ves muy grandes/pequeñas)
+					modelAlga = glm::scale(modelAlga, glm::vec3(0.6f));
+
+					algaShader->setMat4("model", modelAlga);
+					algaMesh->Draw(*algaShader);
+				}
 			}
 
 			proceduralTime += 0.0001;

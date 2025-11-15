@@ -25,9 +25,9 @@ public:
 	Particles(unsigned int numParticles) {
 		for (unsigned int i = 0; i < numParticles; i++) {
 			Particle P;
-			P.p0.x = (float)((rand() % 51) - 50); // posición random de -400 a 400
-			P.p0.y = (float)(rand() % 6);    // posición random de 0 a 5
-			P.p0.z = (float)((rand() % 51) - 50); // posición random de -400 a 400
+			P.p0.x = (float)((rand() % 121) - 60);   // x en [-60, 60]
+			P.p0.y = (float)(rand() % 6);    // y en [0, 5]
+			P.p0.z = (float)((rand() % 121) - 60);  // z en [-60, 60]
 
 			P.position = P.p0;
 			P.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
