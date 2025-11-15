@@ -164,7 +164,7 @@ ISoundEngine *SoundEngine = createIrrKlangDevice();
 ISound* currentMusic = nullptr; // canción actual
 
 // selección de cámara
-bool    activeCamera = 1; // activamos la primera cámara
+int    activeCamera = 0; // activamos la primera cámara
 
 
 // Entrada a función principal
@@ -333,6 +333,7 @@ bool Start() {
 		std::cout << "10" << std::endl;
 		erizo = new Model("models/Erizo_mar.fbx");
 		std::cout << "Termina animales" << std::endl;
+
 	}
 
 	{//etc
@@ -340,7 +341,8 @@ bool Start() {
 		burbuja2 = new Model("models/Burbuja2.fbx");
 	}
 
-	character01 = new AnimatedModel("models/ray_merged.fbx");
+	character01 = new AnimatedModel("models/pezBien.fbx");
+	std::cout << "Termina carga personaje" << std::endl;
 
 	// Cubemap
 	vector<std::string> faces
@@ -446,15 +448,39 @@ bool Update() {
 	glm::mat4 projection;
 	glm::mat4 view;
 
-	if (activeCamera) {
-		// Cámara en primera persona
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+	if (activeCamera == 0) {
+		// Primera persona
+		projection = glm::perspective(glm::radians(camera.Zoom),
+			(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 		view = camera.GetViewMatrix();
 	}
-	else {
-		// cámara en tercera persona
-		projection = glm::perspective(glm::radians(camera3rd.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+	else if (activeCamera == 1) {
+		projection = glm::perspective(glm::radians(camera3rd.Zoom),
+			(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 		view = camera3rd.GetViewMatrix();
+
+		dynamicShader->use();
+		dynamicShader->setMat4("projection", projection);
+		dynamicShader->setMat4("view", view);
+
+		glm::mat4 model = glm::mat4(1.0f);
+
+		// Ajuste: posición un poco más abajo y enfrente de la cámara
+		glm::vec3 offset = glm::vec3(0.0f, 0.3f, 0.5f); // bajamos Y a 0.3, enfrente 0.5
+		model = glm::translate(model, position + offset);
+
+		// Ajuste: rotar hacia donde mira la cámara, pero mostrando la espalda
+		float angle = atan2(forwardView.x, forwardView.z);
+		model = glm::rotate(model, angle + glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		// Mantener la escala que ya tenías
+		model = glm::scale(model, glm::vec3(0.0007f, 0.0007f, 0.0007f));
+
+		dynamicShader->setMat4("model", model);
+
+		character01->UpdateAnimation(deltaTime);
+		character01->Draw(*dynamicShader);
+
 	}
 
 	
@@ -1129,11 +1155,34 @@ void processInput(GLFWwindow* window)
 		camera3rd.Position -= trdpersonOffset * forwardView;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
-		activeCamera = 0;
-	if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS)
-		activeCamera = 1;
-	
+	// Detectar transición de teclas F1 y F2
+	static bool f1Last = false;
+	static bool f2Last = false;
+
+	bool f1Now = glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS;
+	bool f2Now = glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS;
+
+	if (f1Now && !f1Last) {
+		activeCamera = 0; // primera persona
+		std::cout << "Cámara: Primera persona" << std::endl;
+	}
+	if (f2Now && !f2Last) {
+		activeCamera = 1; // tercera persona
+		std::cout << "Cámara: Tercera persona" << std::endl;
+	}
+
+	f1Last = f1Now;
+	f2Last = f2Now;
+
+	// Sincronizar la posición del jugador con la cámara activa
+	position = camera.Position;
+	forwardView = camera.Front;
+
+	// Actualizar cámara de tercera persona para que siga al jugador
+	camera3rd.Position = position;
+	camera3rd.Position.y += 1.7f; // altura de la cámara
+	camera3rd.Position -= trdpersonOffset * forwardView; // offset hacia atrás
+	camera3rd.Front = forwardView;
 }
 
 // glfw: Actualizamos el puerto de vista si hay cambios del tamaño
