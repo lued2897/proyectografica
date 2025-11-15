@@ -6,6 +6,7 @@ layout (location = 3) in vec3  tangent;
 layout (location = 4) in vec3  bitangent;
 
 out vec2 TexCoords;
+out vec3 ex_N; //
 
 uniform mat4 model;
 uniform mat4 view;
@@ -15,8 +16,14 @@ uniform float time = 0.0;
 uniform float radius = 0.0;
 uniform float height = 0.0;
 
+out vec3 vertexPosition_cameraspace; //
+out vec3 Normal_cameraspace; //
+
 void main()
 {
+
+    
+
     float t = time;
 
     // Nudo de trébol
@@ -32,4 +39,8 @@ void main()
 
     gl_Position = projection * view * model * PosL;
     TexCoords = aTexCoords;
+
+    vertexPosition_cameraspace = ( view * model * vec4(aPos,1)).xyz; //
+    Normal_cameraspace = ( view * model * vec4(aNormal,0)).xyz; //
+    ex_N = aNormal; //
 }

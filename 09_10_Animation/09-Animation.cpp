@@ -755,6 +755,28 @@ bool Update() {
 			model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
 			proceduralShader->setMat4("model", model);
 
+			for (size_t i = 0; i < gLights.size(); ++i) {
+				SetLightUniformVec3(proceduralShader, "Position", i, gLights[i].Position);
+				SetLightUniformVec3(proceduralShader, "Direction", i, gLights[i].Direction);
+				SetLightUniformVec4(proceduralShader, "Color", i, gLights[i].Color);
+				SetLightUniformVec4(proceduralShader, "Power", i, gLights[i].Power);
+				SetLightUniformInt(proceduralShader, "alphaIndex", i, gLights[i].alphaIndex);
+				SetLightUniformFloat(proceduralShader, "distance", i, gLights[i].distance);
+			}
+
+			proceduralShader->setInt("numLights", (int)gLights.size());
+
+			proceduralShader->setVec4("MaterialAmbientColor", material01.ambient);
+			proceduralShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			proceduralShader->setVec4("MaterialSpecularColor", material01.specular);
+			proceduralShader->setFloat("transparency", material01.transparency);
+
+			proceduralShader->setVec3("cameraPos", camera.Position);
+			proceduralShader->setFloat("waterLevel", 0.0f); // adjust if needed
+			proceduralShader->setFloat("fogDensity", 0.03f);
+			proceduralShader->setFloat("depthAttenuation", 0.006f);
+			proceduralShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+
 			proceduralShader->setFloat("time", proceduralTime);
 			proceduralShader->setFloat("radius", 20.0f);
 			proceduralShader->setFloat("height", 20.0f);
@@ -812,9 +834,11 @@ bool Update() {
 			
 			
 			
+			
 			//cangrejo->UpdateAnimation(deltaTime);
 
-
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			// Activación del shader del personaje
 			dynamicShader->use();
 
@@ -828,6 +852,24 @@ bool Update() {
 			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
+
+			dynamicShader->setInt("numLights", (int)gLights.size());
+			for (size_t i = 0; i < gLights.size(); ++i) {
+				SetLightUniformVec3(dynamicShader, "Position", i, gLights[i].Position);
+				SetLightUniformVec3(dynamicShader, "Direction", i, gLights[i].Direction);
+				SetLightUniformVec4(dynamicShader, "Color", i, gLights[i].Color);
+				SetLightUniformVec4(dynamicShader, "Power", i, gLights[i].Power);
+				SetLightUniformInt(dynamicShader, "alphaIndex", i, gLights[i].alphaIndex);
+				SetLightUniformFloat(dynamicShader, "distance", i, gLights[i].distance);
+			}
+
+			mLightsShader->setVec3("eye", camera.Position);
+
+			// Aplicamos propiedades materiales
+			dynamicShader->setVec4("MaterialAmbientColor", material01.ambient);
+			dynamicShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			dynamicShader->setVec4("MaterialSpecularColor", material01.specular);
+			dynamicShader->setFloat("transparency", material01.transparency);
 
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
 
@@ -856,11 +898,11 @@ bool Update() {
 			AnimatedModel* cangrejo;*/
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
 			//character01->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 
 			caballito->UpdateAnimation(deltaTime);
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -871,7 +913,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, caballito->gBones);
 			caballito->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			pez->UpdateAnimation(deltaTime);
 
@@ -879,7 +921,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 5.0f);
 			dynamicShader->setFloat("height", 10.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -890,7 +932,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pez->gBones);
 			pez->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			cangrejo->UpdateAnimation(deltaTime);
 
@@ -898,7 +940,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 2.0f);
 			dynamicShader->setFloat("height", 1.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -909,7 +951,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
 			cangrejo->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			medusa->UpdateAnimation(deltaTime);
 
@@ -917,7 +959,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 25.0f);
 			dynamicShader->setFloat("height", 15.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -928,7 +970,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, medusa->gBones);
 			medusa->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			pulpo->UpdateAnimation(deltaTime);
 
@@ -936,7 +978,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 8.0f);
 			dynamicShader->setFloat("height", 10.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -947,7 +989,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
 			pulpo->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			calamar->UpdateAnimation(deltaTime);
 
@@ -955,7 +997,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 35.0f);
 			dynamicShader->setFloat("height", 7.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 
@@ -968,7 +1010,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
 			calamar->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			mantaraya->UpdateAnimation(deltaTime);
 
@@ -976,7 +1018,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 40.0f);
 			dynamicShader->setFloat("height", 5.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -987,7 +1029,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, mantaraya->gBones);
 			mantaraya->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			delfin->UpdateAnimation(deltaTime);
 
@@ -995,7 +1037,7 @@ bool Update() {
 			dynamicShader->setFloat("radius", 20.0f);
 			dynamicShader->setFloat("height", 3.0f);*/
 
-			dynamicShader->use();
+			//dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 			model = glm::mat4(1.0f);
@@ -1006,7 +1048,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
 			delfin->Draw(*dynamicShader);
-			glUseProgram(0);
+			//glUseProgram(0);
 
 			proceduralTime += 0.0001;
 		}
