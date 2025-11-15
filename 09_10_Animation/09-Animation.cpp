@@ -156,6 +156,7 @@ Material material01;
 
 float proceduralTime = 0.0f;
 float wavesTime = 0.0f;
+glm::vec4 WHITE(0.8f, 0.8f, 0.8, 1.0f);
 
 // Audio
 ISoundEngine *SoundEngine = createIrrKlangDevice();
@@ -165,6 +166,18 @@ ISound* currentMusic = nullptr; // canción actual
 
 // selección de cámara
 int    activeCamera = 0; // activamos la primera cámara
+
+
+bool nearTrash(glm::vec3 cameraPos, glm::vec3 transform) {
+	if (length(glm::vec2(cameraPos.x, cameraPos.z) - glm::vec2(transform.x, transform.z)) < 2.5f) {
+		std::cout << "Tenedor" << std::endl;
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 
 // Entrada a función principal
@@ -423,6 +436,32 @@ void SetLightUniformVec3(Shader* shader, const char* propertyName, size_t lightI
 }
 
 
+void prepareTrash(Model* object, glm::vec3 translate, float rotatex, glm::vec3 scale) {
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, translate); // translate it down so it's at the center of the scene
+	model = glm::rotate(model, glm::radians(rotatex), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::scale(model, scale);	// it's a bit too big for our scene, so scale it down
+	mLightsShader->setMat4("model", model);
+
+	//Luces
+	for (size_t i = 0; i < gLights.size(); ++i) {
+		SetLightUniformVec3(mLightsShader, "Position", i, gLights[i].Position);
+		SetLightUniformVec3(mLightsShader, "Direction", i, gLights[i].Direction);
+		SetLightUniformVec4(mLightsShader, "Color", i, gLights[i].Color);
+		SetLightUniformVec4(mLightsShader, "Power", i, gLights[i].Power);
+		SetLightUniformInt(mLightsShader, "alphaIndex", i, object->material.alphaIndex);
+		SetLightUniformFloat(mLightsShader, "distance", i, gLights[i].distance);
+	}
+
+	// Aplicamos propiedades materiales
+	mLightsShader->setVec4("MaterialAmbientColor", object->material.ambient);
+	mLightsShader->setVec4("MaterialDiffuseColor", object->material.diffuse);
+	mLightsShader->setVec4("MaterialSpecularColor", object->material.specular);
+	mLightsShader->setFloat("transparency", object->material.transparency);
+
+}
+
+
 bool Update() {
 	// Cálculo del framerate
 	float currentFrame = (float)glfwGetTime();
@@ -530,6 +569,10 @@ bool Update() {
 			mLightsShader->setMat4("projection", projection);
 			mLightsShader->setMat4("view", view);
 
+			glm::vec3 translate_temp;
+			float rotatex_temp;
+			glm::vec3 scale_temp;
+
 			// Aplicamos transformaciones del modelo
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
@@ -599,19 +642,33 @@ bool Update() {
 			//glUseProgram(0);
 
 
-			//mLightsShader->use();
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-5.0f, 0.15f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));	// it's a bit too big for our scene, so scale it down
-			mLightsShader->setMat4("model", model);
-			// Aplicamos propiedades materiales
-			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
-			tenedor->Draw(*mLightsShader);
+			//Tenedor
+				//model = glm::mat4(1.0f);
+				//model = glm::translate(model, glm::vec3(-5.0f, 0.15f, 0.0f)); // translate it down so it's at the center of the scene
+				//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				//model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));	// it's a bit too big for our scene, so scale it down
 			//glUseProgram(0);
+			translate_temp = glm::vec3(-5.0f, 0.15f, 0.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.05f, 0.05f, 0.05f);
+			prepareTrash(tenedor,translate_temp,rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				//std::cout << "Tenedor" << std::endl;
+				//mLightsShader->setMat4("model", model);
+				// Aplicamos propiedades materiales
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", material01.transparency);
+				tenedor->Draw(*mLightsShader);
+			}
+			else {
+				//mLightsShader->use();
+				
+				//mLightsShader->setMat4("model", model);
+				// Aplicamos propiedades materiales
+				tenedor->Draw(*mLightsShader);
+			}
 
 			//mLightsShader->use();
 			model = glm::mat4(1.0f);

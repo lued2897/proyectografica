@@ -4,6 +4,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <modelstructs.h>
+#include <material.h>
 
 class Model 
 {
@@ -13,6 +14,8 @@ public:
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
+
+	Material material;
 
 	string filename;
 
