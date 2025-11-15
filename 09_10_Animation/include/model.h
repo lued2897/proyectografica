@@ -90,20 +90,26 @@ public:
 	}
 	void calculateAABB() {
 		//std::vector<AABB> aabbs;
+		aabbs.resize(meshes.size());
 		int i = 0;
 		/*aabbs.minExtent = glm::vec3(std::numeric_limits<float>::max());
 		aabbs.maxExtent = glm::vec3(std::numeric_limits<float>::lowest());*/
+		//cout << "Entra a AABB"<< endl;
 		for (const auto& mesh : meshes) {
+			//cout << "Mesh" << endl;
+
 			aabbs[i].minExtent = glm::vec3(std::numeric_limits<float>::max());
 			aabbs[i].maxExtent = glm::vec3(std::numeric_limits<float>::lowest());
 			for (const auto& vertex : mesh.vertices) {
+				//Pinche opengl
 				aabbs[i].minExtent.x = std::min(aabbs[i].minExtent.x, vertex.Position.x);
-				aabbs[i].minExtent.y = std::min(aabbs[i].minExtent.y, vertex.Position.y);
-				aabbs[i].minExtent.z = std::min(aabbs[i].minExtent.z, vertex.Position.z);
+				aabbs[i].minExtent.y = std::min(aabbs[i].minExtent.y, -vertex.Position.z);
+				aabbs[i].minExtent.z = std::min(aabbs[i].minExtent.z, -vertex.Position.y);
 
 				aabbs[i].maxExtent.x = std::max(aabbs[i].maxExtent.x, vertex.Position.x);
-				aabbs[i].maxExtent.y = std::max(aabbs[i].maxExtent.y, vertex.Position.y);
-				aabbs[i].maxExtent.z = std::max(aabbs[i].maxExtent.z, vertex.Position.z);
+				aabbs[i].maxExtent.y = std::max(aabbs[i].maxExtent.y, -vertex.Position.z);
+				aabbs[i].maxExtent.z = std::max(aabbs[i].maxExtent.z, -vertex.Position.y);
+
 			}
 			i = i + 1;
 		}

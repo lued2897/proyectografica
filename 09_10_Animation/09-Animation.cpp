@@ -75,6 +75,9 @@ float     rotateCharacter = 0.0f;
 float	  door_offset = 0.0f;
 float	  door_rotation = 0.0f;
 
+//Radio para colisiones
+float cameraRadius = 0.4f;  // whatever you want
+
 //variables para efecto bajo el agua
 float		water_level = 5.0f;
 float		fog_density = 0.04f;
@@ -92,6 +95,8 @@ bool draw_plato = true;
 bool draw_botella_vidrio = true;
 bool draw_botella_plastico = true;
 bool draw_cigarro = true;
+
+bool draw_colliders = false;
 
 //Generación de algas aleatorias
 const int NUM_ALGAS = 200;
@@ -133,6 +138,9 @@ Model	*burbuja2;
 
 Model* alga3d;
 Model* algaMesh;
+
+//colisiones
+Model* bounding_boxes;
 
 
 // 
@@ -206,6 +214,20 @@ float fullscreenQuad[] = {
 	 1.0f, -1.0f,  1.0f, 1.0f,   // bottom-right
 	 1.0f,  1.0f,  1.0f, 0.0f    // top-right → texCoord (1,0)
 };
+
+//colisiones
+bool sphereAABB(const glm::vec3& center, float radius, const AABB& box)
+{
+	glm::vec3 closestPoint;
+	closestPoint.x = glm::clamp(center.x, box.minExtent.x, box.maxExtent.x);
+	closestPoint.y = glm::clamp(center.y, box.minExtent.y, box.maxExtent.y);
+	closestPoint.z = glm::clamp(center.z, box.minExtent.z, box.maxExtent.z);
+
+	glm::vec3 diff = closestPoint - center;
+	float dist2 = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+
+	return dist2 < radius * radius;
+}
 
 
 bool nearTrash(glm::vec3 cameraPos, glm::vec3 transform) {
@@ -357,6 +379,10 @@ bool Start() {
 	/*house = new Model("models/IllumModels/House03.fbx");*/
 	//house = new Model("models/rocks_w_corals.fbx");
 	terrain = new Model("models/scene_static_models.fbx");
+	//colisiones
+	bounding_boxes = new Model("models/bounding_boxes_terrain.fbx");
+	bounding_boxes->calculateAABB();
+
 	decor = new Model("models/decor.fbx");
 	//boat = new Model("models/boat.fbx");
 	moon = new Model("models/IllumModels/moon.fbx");
@@ -742,6 +768,8 @@ bool Update() {
 
 			terrain->Draw(*mLightsShader);
 			decor->Draw(*mLightsShader);
+			if(draw_colliders)
+				bounding_boxes->Draw(*mLightsShader);
 			//boat->Draw(*mLightsShader);
 
 			////Bolsa//
@@ -1277,6 +1305,7 @@ bool Update() {
 			//glUseProgram(0);
 
 			// ===== DELFINES EN ANILLO SINUSOIDAL =====
+			delfin->UpdateAnimation(deltaTime);
 			static float delfinTime = 0.0f;
 			delfinTime += deltaTime * 0.5f;   // velocidad de recorrido sobre la curva
 			dynamicShader->use();
@@ -1428,27 +1457,76 @@ bool Update() {
 	return true;
 }
 
+bool TryMove(const glm::vec3& offset, const std::vector<AABB>& colliders, float radius)
+{
+	glm::vec3 newPos = camera.Position + offset;
+
+	// collision check
+	for (const AABB& box : colliders)
+	{
+		if (sphereAABB(newPos, radius, box))
+			return false; // BLOCKED
+	}
+
+	// safe → apply move
+	camera.Position = newPos;
+	return true;
+}
+
+glm::vec3 ComputeMovement(Camera_Movement direction, float deltaTime)
+{
+	float velocity = camera.MovementSpeed * deltaTime;
+	glm::vec3 move(0.0f);
+
+	if (direction == FORWARD) {
+		move.x += camera.Front.x * velocity;
+		move.z += camera.Front.z * velocity;
+	}
+	if (direction == BACKWARD) {
+		move.x -= camera.Front.x * velocity;
+		move.z -= camera.Front.z * velocity;
+	}
+	if (direction == LEFT) {
+		move -= camera.Right * velocity;
+	}
+	if (direction == RIGHT) {
+		move += camera.Right * velocity;
+	}
+
+	return move;
+}
+
 // Procesamos entradas del teclado
 void processInput(GLFWwindow* window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		glm::vec3 off = ComputeMovement(FORWARD, deltaTime);
+		TryMove(off*2.0f, bounding_boxes->aabbs, cameraRadius);
+	}
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime*5.0);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		glm::vec3 off = ComputeMovement(BACKWARD, deltaTime);
+		TryMove(off, bounding_boxes->aabbs, cameraRadius);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		glm::vec3 off = ComputeMovement(LEFT, deltaTime);
+		TryMove(off, bounding_boxes->aabbs, cameraRadius);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		glm::vec3 off = ComputeMovement(RIGHT, deltaTime);
+		TryMove(off, bounding_boxes->aabbs, cameraRadius);
+	}
+
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-
+		draw_colliders = true;
+	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+		draw_colliders = false;
 	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
 		submarino = true;
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
@@ -1567,3 +1645,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera.ProcessMouseScroll((float)yoffset);
 }
+
+
+
