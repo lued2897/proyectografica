@@ -31,6 +31,9 @@
 #include <irrKlang.h>
 using namespace irrklang;
 
+#include "stb_image.h"
+
+
 // Functions
 bool Start();
 bool Update();
@@ -103,6 +106,9 @@ Shader *cubemapShader;
 Shader *dynamicShader;
 
 Shader* algaShader; // Shader Animación de algas
+
+Shader* fullscreenShader; //UI
+
 
 // ---------------------------------- Pariculas ----------------------------------
 Shader* particlesShader;
@@ -186,6 +192,20 @@ ISound* currentMusic = nullptr; // canción actual
 
 // selección de cámara
 int    activeCamera = 0; // activamos la primera cámara
+
+//para imprimir imagen en pantalla completa
+unsigned int quadVAO, quadVBO;
+unsigned int textTexture;
+float fullscreenQuad[] = {
+	// pos      // tex coords (invertido en Y)
+	-1.0f,  1.0f,  0.0f, 0.0f,   // top-left → texCoord (0,0)
+	-1.0f, -1.0f,  0.0f, 1.0f,   // bottom-left → texCoord (0,1)
+	 1.0f, -1.0f,  1.0f, 1.0f,   // bottom-right → texCoord (1,1)
+
+	-1.0f,  1.0f,  0.0f, 0.0f,   // top-left
+	 1.0f, -1.0f,  1.0f, 1.0f,   // bottom-right
+	 1.0f,  1.0f,  1.0f, 0.0f    // top-right → texCoord (1,0)
+};
 
 
 bool nearTrash(glm::vec3 cameraPos, glm::vec3 transform) {
@@ -324,6 +344,9 @@ bool Start() {
 
 	//algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/13_algaAnimation.fs"); // Shader Animación de algas
 	algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/10_fragment_skinning-IT.fs");
+
+	//shader de UI
+	fullscreenShader = new Shader("shaders/fullscreen.vs", "shaders/fullscreen.fs");
 
 	// Máximo número de huesos: 100
 	dynamicShader->setBonesIDs(MAX_RIGGING_BONES);
@@ -469,6 +492,46 @@ bool Start() {
 
 		algaPositions.push_back(glm::vec3(x, y, z));
 	}
+
+	glGenTextures(1, &textTexture);
+	glBindTexture(GL_TEXTURE_2D, textTexture);
+
+	// Configura parámetros de textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Carga la imagen
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load("textures/pressR.png", &width, &height, &nrChannels, 0);
+	if (data) {
+		GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		std::cout << "Se cargó pressR.png con tamaño: " << width << "x" << height << std::endl;
+	}
+	else {
+		std::cout << "Error al cargar pressR.png" << std::endl;
+	}
+
+	stbi_image_free(data);
+
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(fullscreenQuad), fullscreenQuad, GL_STATIC_DRAW);
+
+	// posición
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	// tex coords
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	glBindVertexArray(0);
+
 
 	return true;
 }
@@ -715,7 +778,7 @@ bool Update() {
 				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 					draw_tenedor = false;
 				if (draw_tenedor)
-				tenedor->Draw(*mLightsShader);
+					tenedor->Draw(*mLightsShader);
 			}
 			else {
 				if (draw_tenedor)
@@ -912,7 +975,21 @@ bool Update() {
 
 		}
 
-		
+		// Mostrar imagen de texto como overlay en pantalla completa
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		fullscreenShader->use();
+		glBindVertexArray(quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textTexture);
+		fullscreenShader->setInt("screenTexture", 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
 
 
 		// Actividad 5.2
