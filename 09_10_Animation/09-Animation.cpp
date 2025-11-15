@@ -107,7 +107,7 @@ Shader* algaShader; // Shader Animación de algas
 // ---------------------------------- Pariculas ----------------------------------
 Shader* particlesShader;
 // Partículas
-Particles particlesSystem(7wwwwww00); // creamos 200 partículas
+Particles particlesSystem(700); // creamos 200 partículas
 
 // Carga la información del modelo
 Model* particleModel;
@@ -232,6 +232,36 @@ glm::vec3 trebol(glm::vec3 translate,float time, float radius, float height) {
 	translate[1] += height;
 	
 	return translate;
+}
+//movimiento del delfin
+glm::vec3 anilloSinusoidal(glm::vec3 center, float t, float radius, float amplitude, float n)
+{
+	float x = center.x + radius * cos(t);
+	float z = center.z + radius * sin(t);
+	float y = center.y + amplitude * sin(n * t);
+
+	return glm::vec3(x, y, z);
+}
+glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
+{
+	glm::vec3 forward = glm::normalize(next - current); // dirección de avance
+
+	// Up “global”
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	// Evitar que forward sea casi paralelo a up
+	if (fabs(glm::dot(forward, up)) > 0.99f)
+		up = glm::vec3(0.0f, 0.0f, 1.0f);
+
+	glm::vec3 right = glm::normalize(glm::cross(up, forward));
+	up = glm::normalize(glm::cross(forward, right));
+
+	glm::mat4 R(1.0f);
+	// Columnas de la matriz (convención de GLM)
+	R[0] = glm::vec4(right, 0.0f);
+	R[1] = glm::vec4(up, 0.0f);
+	R[2] = glm::vec4(forward, 0.0f);  // forward, si tu delfín mira hacia +Z
+	return R;
 }
 
 
@@ -978,15 +1008,15 @@ bool Update() {
 
 		// Objeto animado
 
-		{	
+		{
 			character01->UpdateAnimation(deltaTime);
 			//pez->UpdateAnimation(deltaTime);
 			//tortuga->UpdateAnimation(deltaTime);
-			
-			
-			
-			
-			
+
+
+
+
+
 			//cangrejo->UpdateAnimation(deltaTime);
 
 			glEnable(GL_BLEND);
@@ -1183,24 +1213,63 @@ bool Update() {
 			mantaraya->Draw(*dynamicShader);
 			//glUseProgram(0);
 
-			delfin->UpdateAnimation(deltaTime);
-
-			/*dynamicShader->setFloat("time", proceduralTime);
-			dynamicShader->setFloat("radius", 20.0f);
-			dynamicShader->setFloat("height", 3.0f);*/
-
-			//dynamicShader->use();
+			// ===== DELFINES EN ANILLO SINUSOIDAL =====
+			static float delfinTime = 0.0f;
+			delfinTime += deltaTime * 0.5f;   // velocidad de recorrido sobre la curva
+			dynamicShader->use();
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
-			model = glm::mat4(1.0f);
-			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 5.0, 7.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
-			delfin->Draw(*dynamicShader);
-			//glUseProgram(0);
+			// -------- Delfín 1: sentido "normal" --------
+			{
+				static float delfinTime = 0.0f;
+				delfinTime += deltaTime * 0.5f;
+
+				glm::vec3 centroDelfin1 = glm::vec3(0.0f, 3.0f, 0.0f);
+				float radius1 = 10.0f;
+				float amplitude1 = 2.0f;
+				float n1 = 2.0f;
+
+				float t1 = delfinTime;
+
+				glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
+				glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
+
+				glm::mat4 model1 = glm::mat4(1.0f);
+				model1 = glm::translate(model1, posNow1);
+
+				glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
+				model1 *= R1;
+
+				model1 = glm::scale(model1, glm::vec3(0.001f));
+				dynamicShader->setMat4("model", model1);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+				delfin->Draw(*dynamicShader);
+			}
+			// -------- Delfín 2: mismo recorrido pero al revés --------
+			{
+				glm::vec3 centroDelfin2 = glm::vec3(0.0f, 4.5f, 0.0f); // un poco más alto
+				float radius2 = 13.0f;  // anillo más grande
+				float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
+				float n2 = 2.0f;
+
+				float t2 = -delfinTime;    // recorre la curva al revés
+
+				glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
+				glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
+				//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+
+				glm::mat4 model2 = glm::mat4(1.0f);
+				model2 = glm::translate(model2, posNow2);
+
+				glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
+				model2 *= R2;
+
+				model2 = glm::scale(model2, glm::vec3(0.001f));
+				dynamicShader->setMat4("model", model2);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+				delfin->Draw(*dynamicShader);
+			}
+		
 
 			// ================== DIBUJAR ALGAS 2D con iluminación =====================
 			{
