@@ -179,6 +179,8 @@ AnimatedModel	*delfin;
 AnimatedModel	*cangrejo;
 Model			*erizo;
 
+AnimatedModel* diver;
+
 
 float tradius = 10.0f;
 float theta = 0.0f;
@@ -198,7 +200,7 @@ float proceduralTime = 0.0f;
 float wavesTime = 0.0f;
 glm::vec4 WHITE(0.8f, 0.8f, 0.8, 1.0f);
 
-// Audio
+// Audio/
 ISoundEngine *SoundEngine = createIrrKlangDevice();
 
 //Cancion segun la escena
@@ -458,6 +460,8 @@ bool Start() {
 		delfin = new AnimatedModel("models/DolphinFinal_Animate2.fbx");
 		std::cout << "10" << std::endl;
 		erizo = new Model("models/Erizo_mar.fbx");
+		std::cout << "11" << std::endl;
+		diver = new AnimatedModel("models/diver_swim.fbx");
 		std::cout << "Termina animales" << std::endl;
 
 	}
@@ -685,20 +689,22 @@ bool Update() {
 		glm::mat4 model = glm::mat4(1.0f);
 
 		// Ajuste: posición un poco más abajo y enfrente de la cámara
-		glm::vec3 offset = glm::vec3(0.0f, 0.3f, 0.5f); // bajamos Y a 0.3, enfrente 0.5
+		glm::vec3 offset = glm::vec3(0.0f, -0.5f, 1.5f); // bajamos Y a 0.3, enfrente 0.5
 		model = glm::translate(model, position + offset);
 
 		// Ajuste: rotar hacia donde mira la cámara, pero mostrando la espalda
 		float angle = atan2(forwardView.x, forwardView.z);
+		model = glm::rotate(model, glm::radians(rotateCharacter+180.0f), glm::vec3(0.0, 1.0f, 0.0f));
 		model = glm::rotate(model, angle + glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 		// Mantener la escala que ya tenías
-		model = glm::scale(model, glm::vec3(0.0007f, 0.0007f, 0.0007f));
+		model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
 
 		dynamicShader->setMat4("model", model);
+		dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, diver->gBones);
 
-		character01->UpdateAnimation(deltaTime);
-		character01->Draw(*dynamicShader);
+		diver->UpdateAnimation(deltaTime);
+		diver->Draw(*dynamicShader);
 
 	}
 
@@ -712,33 +718,7 @@ bool Update() {
 		}
 		bounding_boxes = bounding_boxes_agua;
 		{
-			{
-				// Activación del shader de las partículas
-				particlesShader->use();
-				particlesShader->setMat4("projection", projection);
-				particlesShader->setMat4("view", view);
-
-				// Activamos para objetos transparentes
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				glm::mat4 model;
-
-				for (int psc = 0; psc < particlesSystem.particles.size(); psc++) {
-					Particle p_i = particlesSystem.particles.at(psc);
-
-					// Aplicamos transformaciones del modelo
-					model = glm::mat4(1.0f);
-					model = glm::translate(model, p_i.position); // translate it down so it's at the center of the scene
-					model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-					model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
-
-					particlesShader->setMat4("model", model);
-
-					// Dibujamos el modelo
-					particleModel->Draw(*particlesShader);
-				}
-
-			}
+			
 
 
 			mLightsShader->use();
@@ -1451,6 +1431,34 @@ bool Update() {
 				}
 			}
 
+			{
+				// Activación del shader de las partículas
+				particlesShader->use();
+				particlesShader->setMat4("projection", projection);
+				particlesShader->setMat4("view", view);
+
+				// Activamos para objetos transparentes
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				glm::mat4 model;
+
+				for (int psc = 0; psc < particlesSystem.particles.size(); psc++) {
+					Particle p_i = particlesSystem.particles.at(psc);
+
+					// Aplicamos transformaciones del modelo
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, p_i.position); // translate it down so it's at the center of the scene
+					model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
+
+					particlesShader->setMat4("model", model);
+
+					// Dibujamos el modelo
+					particleModel->Draw(*particlesShader);
+				}
+
+			}
+
 			proceduralTime += 0.0001;
 		}
 		// Mostrar imagen de texto como overlay en pantalla completa
@@ -1521,6 +1529,8 @@ bool Update() {
 		// parametros para efecto de agua
 		mLightsShader->setVec3("cameraPos", camera.Position);
 		mLightsShader->setFloat("time", glfwGetTime());
+
+		//PAREMETROS AGUA, PONER EN 0 PARA ESCENAS EN LA PLAYA
 		mLightsShader->setFloat("waterLevel", 0.0f); // adjust if needed
 		mLightsShader->setFloat("fogDensity", 0.00f);
 		mLightsShader->setFloat("depthAttenuation", 0.0f);
@@ -1624,9 +1634,9 @@ void processInput(GLFWwindow* window)
 			camera.Position = glm::vec3(0.0f, 2.0f, 10.0f);
 		}
 	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-		door_rotation += 0.1f;
+		door_rotation += 0.01f;
 	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-		door_rotation -= 0.1f;
+		door_rotation -= 0.01f;
 
 	// Character movement
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
