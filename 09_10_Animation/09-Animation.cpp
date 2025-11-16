@@ -176,6 +176,7 @@ Model			*estrella;
 AnimatedModel	*mantaraya;
 AnimatedModel	*caballito;
 AnimatedModel	*delfin;
+AnimatedModel	*delfin2;
 AnimatedModel	*cangrejo;
 Model			*erizo;
 
@@ -462,6 +463,8 @@ bool Start() {
 		erizo = new Model("models/Erizo_mar.fbx");
 		std::cout << "11" << std::endl;
 		diver = new AnimatedModel("models/diver_swim.fbx");
+		std::cout << "12" << std::endl;
+		delfin2 = new AnimatedModel("models/DolphinFinal_Animate3.fbx");
 		std::cout << "Termina animales" << std::endl;
 
 	}
@@ -1323,8 +1326,8 @@ bool Update() {
 				static float delfinTime = 0.0f;
 				delfinTime += deltaTime * 0.5f;
 
-				glm::vec3 centroDelfin1 = glm::vec3(0.0f, 3.0f, 0.0f);
-				float radius1 = 10.0f;
+				glm::vec3 centroDelfin1 = glm::vec3(-10.0f, 5.0f, -10.0f);
+				float radius1 = 8.0f;
 				float amplitude1 = 2.0f;
 				float n1 = 2.0f;
 
@@ -1346,8 +1349,8 @@ bool Update() {
 			}
 			// -------- Delfín 2: mismo recorrido pero al revés --------
 			{
-				glm::vec3 centroDelfin2 = glm::vec3(0.0f, 4.5f, 0.0f); // un poco más alto
-				float radius2 = 13.0f;  // anillo más grande
+				glm::vec3 centroDelfin2 = glm::vec3(-10.0f, 7.5f, -10.0f); // un poco más alto
+				float radius2 = 10.0f;  // anillo más grande
 				float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
 				float n2 = 2.0f;
 
@@ -1367,6 +1370,113 @@ bool Update() {
 				dynamicShader->setMat4("model", model2);
 				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
 				delfin->Draw(*dynamicShader);
+			}
+			// -------- Delfín 3 --------
+			{
+				glm::vec3 centroDelfin2 = glm::vec3(0.0f, 10.0f, 30.0f); // un poco más alto
+				float radius2 = 10.0f;  // anillo más grande
+				float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
+				float n2 = 2.0f;
+
+				float t2 = -delfinTime;    // recorre la curva al revés
+
+				glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
+				glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
+				//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+
+				glm::mat4 model2 = glm::mat4(1.0f);
+				model2 = glm::translate(model2, posNow2);
+
+				glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
+				model2 *= R2;
+
+				model2 = glm::scale(model2, glm::vec3(0.001f));
+				dynamicShader->setMat4("model", model2);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+				delfin->Draw(*dynamicShader);
+			}
+			// -------- Delfín 4 --------
+			{
+				static float delfinTime = 0.0f;
+				delfinTime += deltaTime * 0.5f;
+
+				glm::vec3 centroDelfin1 = glm::vec3(0.0f, 8.0f, 30.0f);
+				float radius1 = 8.0f;
+				float amplitude1 = 2.0f;
+				float n1 = 2.0f;
+
+				float t1 = delfinTime;
+
+				glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
+				glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
+
+				glm::mat4 model1 = glm::mat4(1.0f);
+				model1 = glm::translate(model1, posNow1);
+
+				glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
+				model1 *= R1;
+
+				model1 = glm::scale(model1, glm::vec3(0.001f));
+				dynamicShader->setMat4("model", model1);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+				delfin->Draw(*dynamicShader);
+			}
+			// ===== DELFINES VUELTA EN ANILLO SINUSOIDAL =====
+			delfin2->UpdateAnimation(deltaTime);
+			static float delfinTime2 = 0.0f;
+			delfinTime2 += deltaTime * 0.3f;   // velocidad de recorrido sobre la curva
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			// -------- Delfín 1: sentido "normal" --------
+			{
+				static float delfinTime2 = 0.0f;
+				delfinTime2 += deltaTime * 0.5f;
+
+				glm::vec3 centroDelfin1 = glm::vec3(20.0f, 10.0f, -5.0f);
+				float radius1 = 6.0f;
+				float amplitude1 = 1.0f;
+				float n1 = 1.0f;
+
+				float t1 = delfinTime2;
+
+				glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
+				glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
+
+				glm::mat4 model1 = glm::mat4(1.0f);
+				model1 = glm::translate(model1, posNow1);
+
+				glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
+				model1 *= R1;
+
+				model1 = glm::scale(model1, glm::vec3(0.001f));
+				dynamicShader->setMat4("model", model1);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin2->gBones);
+				delfin2->Draw(*dynamicShader);
+			}
+			// -------- Delfín 2: mismo recorrido pero al revés --------
+			{
+				glm::vec3 centroDelfin2 = glm::vec3(20.0f, 8.0f, -5.0f); // un poco más alto
+				float radius2 = 9.0f;  // anillo más grande
+				float amplitude2 = 1.0f;   // un poco menos de oscilación vertical
+				float n2 = 1.0f;
+
+				float t2 = -delfinTime2;    // recorre la curva al revés
+
+				glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
+				glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
+				//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+
+				glm::mat4 model2 = glm::mat4(1.0f);
+				model2 = glm::translate(model2, posNow2);
+
+				glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
+				model2 *= R2;
+
+				model2 = glm::scale(model2, glm::vec3(0.001f));
+				dynamicShader->setMat4("model", model2);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin2->gBones);
+				delfin2->Draw(*dynamicShader);
 			}
 		
 
