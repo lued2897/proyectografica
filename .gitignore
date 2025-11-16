@@ -44,8 +44,8 @@ dll
 *fbm
 *.blend
 *.blend1
-*.jpg
-*.png
+#*.jpg
+#*.png
 
 *.vcxproj
 

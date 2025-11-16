@@ -131,6 +131,9 @@ Model   *boat;
 Model   *moon;
 Model   *gridMesh;
 
+//modelos estaticos playa
+Model* beach_terrain;
+
 
 Model	*chest;
 Model	*burbuja1;
@@ -141,6 +144,8 @@ Model* algaMesh;
 
 //colisiones
 Model* bounding_boxes;
+Model* bounding_boxes_playa;
+Model* bounding_boxes_agua;
 
 
 // 
@@ -181,6 +186,7 @@ float alpha = 0.0f;
 
 // Cubemap
 CubeMap *mainCubeMap;
+CubeMap* beachCubeMap;
 
 // Light gLight;
 std::vector<Light> gLights;
@@ -379,9 +385,14 @@ bool Start() {
 	/*house = new Model("models/IllumModels/House03.fbx");*/
 	//house = new Model("models/rocks_w_corals.fbx");
 	terrain = new Model("models/scene_static_models.fbx");
-	//colisiones
-	bounding_boxes = new Model("models/bounding_boxes_terrain.fbx");
-	bounding_boxes->calculateAABB();
+	//colisiones PLAYA
+	bounding_boxes_agua = new Model("models/bounding_boxes_terrain.fbx");
+	bounding_boxes_agua->calculateAABB();
+	// ---------------------------------- Terreno playa ----------------------------------
+	beach_terrain = new Model("models/beach_terrain.fbx");
+	bounding_boxes_playa = new Model("models/bounding_boxes_playa.fbx");
+	bounding_boxes_playa->calculateAABB();
+
 
 	decor = new Model("models/decor.fbx");
 	//boat = new Model("models/boat.fbx");
@@ -464,15 +475,27 @@ bool Start() {
 	// Cubemap
 	vector<std::string> faces
 	{
-		"textures/cubemap/01/posx.png",
-		"textures/cubemap/01/negx.png",
-		"textures/cubemap/01/posy.png",
-		"textures/cubemap/01/negy.png",
-		"textures/cubemap/01/posz.png",
-		"textures/cubemap/01/negz.png"
+		"textures/cubemap/01/px.png",
+		"textures/cubemap/01/nx.png",
+		"textures/cubemap/01/py.png",
+		"textures/cubemap/01/ny.png",
+		"textures/cubemap/01/pz.png",
+		"textures/cubemap/01/nz.png"
 	};
 	mainCubeMap = new CubeMap();
 	mainCubeMap->loadCubemap(faces);
+
+	vector<std::string> faces_beach
+	{
+		"textures/cubemap/02/px.png",
+		"textures/cubemap/02/nx.png",
+		"textures/cubemap/02/py.png",
+		"textures/cubemap/02/ny.png",
+		"textures/cubemap/02/pz.png",
+		"textures/cubemap/02/nz.png"
+	};
+	beachCubeMap = new CubeMap();
+	beachCubeMap->loadCubemap(faces_beach);
 
 	camera3rd.Position = position;
 	camera3rd.Position.y += 1.7f;
@@ -680,13 +703,14 @@ bool Update() {
 	}
 
 	
-	// Cubemap (fondo)
-	{
-		mainCubeMap->drawCubeMap(*cubemapShader, projection, view);
-	}
+	
 	
 	if (submarino) {
-
+		// Cubemap (fondo)
+		{
+			mainCubeMap->drawCubeMap(*cubemapShader, projection, view);
+		}
+		bounding_boxes = bounding_boxes_agua;
 		{
 			{
 				// Activación del shader de las partículas
@@ -763,6 +787,7 @@ bool Update() {
 			mLightsShader->setFloat("fogDensity", 0.03f);
 			mLightsShader->setFloat("depthAttenuation", 0.0f);
 			mLightsShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+			mLightsShader->setFloat("caustic_intensity", 1.0f);
 
 
 
@@ -1048,6 +1073,7 @@ bool Update() {
 			proceduralShader->setFloat("fogDensity", 0.03f);
 			proceduralShader->setFloat("depthAttenuation", 0.0f);
 			proceduralShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+			proceduralShader->setFloat("caustic_intensity", 1.0f);
 
 			proceduralShader->setFloat("time", proceduralTime);
 			proceduralShader->setFloat("radius", 20.0f);
@@ -1153,6 +1179,7 @@ bool Update() {
 			dynamicShader->setFloat("fogDensity", 0.03f);
 			dynamicShader->setFloat("depthAttenuation", 0.0f);
 			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+			dynamicShader->setFloat("caustic_intensity", 1.0f);
 
 
 
@@ -1397,6 +1424,7 @@ bool Update() {
 				algaShader->setFloat("fogDensity", 0.03f);
 				algaShader->setFloat("depthAttenuation", 0.0f);
 				algaShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
+				algaShader->setFloat("caustic_intensity", 1.0f);
 
 				// Tiempo para la animación de las algas
 				wavesTime += 0.05f;
@@ -1445,8 +1473,66 @@ bool Update() {
 		PlaySceneMusic("sounds/SusurrosdelMar.mp3"); // música submarina
 
 	}
+	//--------------------ESCENA PLAYA------------------------
 	else {
+		{
+			beachCubeMap->drawCubeMap(*cubemapShader, projection, view);
+		}
+		bounding_boxes = bounding_boxes_playa;
+		mLightsShader->use();
+
+		// Activamos para objetos transparentes
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		mLightsShader->setMat4("projection", projection);
+		mLightsShader->setMat4("view", view);
+
+		glm::vec3 translate_temp;
+		float rotatex_temp;
+		glm::vec3 scale_temp;
+
+		// Aplicamos transformaciones del modelo
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		mLightsShader->setMat4("model", model);
+
+		// Configuramos propiedades de fuentes de luz
+		mLightsShader->setInt("numLights", (int)gLights.size());
+		for (size_t i = 0; i < gLights.size(); ++i) {
+			SetLightUniformVec3(mLightsShader, "Position", i, gLights[i].Position);
+			SetLightUniformVec3(mLightsShader, "Direction", i, gLights[i].Direction);
+			SetLightUniformVec4(mLightsShader, "Color", i, gLights[i].Color);
+			SetLightUniformVec4(mLightsShader, "Power", i, gLights[i].Power);
+			SetLightUniformInt(mLightsShader, "alphaIndex", i, gLights[i].alphaIndex);
+			SetLightUniformFloat(mLightsShader, "distance", i, gLights[i].distance);
+		}
+
+		mLightsShader->setVec3("eye", camera.Position);
+
+		// Aplicamos propiedades materiales
+		mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+		mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+		mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+		mLightsShader->setFloat("transparency", material01.transparency);
+
+		// parametros para efecto de agua
+		mLightsShader->setVec3("cameraPos", camera.Position);
+		mLightsShader->setFloat("time", glfwGetTime());
+		mLightsShader->setFloat("waterLevel", 0.0f); // adjust if needed
+		mLightsShader->setFloat("fogDensity", 0.00f);
+		mLightsShader->setFloat("depthAttenuation", 0.0f);
+		mLightsShader->setVec3("fogColor", glm::vec3(0.0f, 0.0f, 0.0f)); 
+		mLightsShader->setFloat("caustic_intensity", 0.0f);
+
+		beach_terrain->Draw(*mLightsShader);
+		glUseProgram(0);
+
 		PlaySceneMusic("sounds/OlasdeSal.mp3"); // música playa
+
+
 	}
 	 
 
@@ -1528,9 +1614,15 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
 		draw_colliders = false;
 	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
-		submarino = true;
+		if (submarino == false) {
+			submarino = true;
+			camera.Position = glm::vec3(0.0f, 2.0f, 10.0f);
+		}		
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		submarino = false;
+		if (submarino == true) {
+			submarino = false;
+			camera.Position = glm::vec3(0.0f, 2.0f, 10.0f);
+		}
 	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
 		door_rotation += 0.1f;
 	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)

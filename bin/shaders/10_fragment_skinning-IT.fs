@@ -28,6 +28,7 @@ uniform float waterLevel = 0.0;                 // y = surface level
 uniform float depthAttenuation = 0.06;          // how dark it gets with depth
 uniform float time;
 uniform float transparency = 1.0;
+uniform float caustic_intensity = 1.0;
 
 
 float causticPattern(vec3 pos, float t)
@@ -129,7 +130,7 @@ void main()
 
         // --- Apply caustics pattern in world space ---
         //float caustics = causticPattern(vec3(worldPos.xz, 0.0) * 0.15, time);
-        float caustics = causticPattern(worldPos * 0.15, time);
+        float caustics = causticPattern(worldPos * 0.15, time)*caustic_intensity;
         baseColor.rgb += vec3(caustics) * 0.05;
 
         // --- Optional: make caustics fade with depth ---

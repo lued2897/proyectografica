@@ -12,6 +12,7 @@ uniform vec4 MaterialAmbientColor;
 uniform vec4 MaterialDiffuseColor;
 uniform vec4 MaterialSpecularColor;
 uniform float transparency;
+uniform float caustic_intensity = 1.0;
 
 #define MAX_LIGHTS 10
 uniform int numLights;
@@ -89,7 +90,7 @@ void main()
 
         // --- Apply caustics pattern in world space ---
         //float caustics = causticPattern(vec3(worldPos.xz, 0.0) * 0.15, time);
-        float caustics = causticPattern(worldPos * 0.15, time);
+        float caustics = causticPattern(worldPos * 0.15, time)*caustic_intensity;
         baseColor.rgb += vec3(caustics) * 0.05;
 
         // --- Optional: make caustics fade with depth ---
