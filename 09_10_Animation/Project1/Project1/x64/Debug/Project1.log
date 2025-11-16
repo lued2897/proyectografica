@@ -3,11 +3,34 @@
 C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(84,25): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
 C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(276,10): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(277,10): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(768,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1160,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1572,22): warning C4305: '+=': truncamiento de 'double' a 'float'
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1641,46): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1611,13): warning C4101: 'scale_temp': variable local sin referencia
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1610,9): warning C4101: 'rotatex_temp': variable local sin referencia
-C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1609,13): warning C4101: 'translate_temp': variable local sin referencia
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(829,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1221,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1674,22): warning C4305: '+=': truncamiento de 'double' a 'float'
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1743,46): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1713,13): warning C4101: 'scale_temp': variable local sin referencia
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1712,9): warning C4101: 'rotatex_temp': variable local sin referencia
+C:\Users\denis\source\repos\proyectografica\09_10_Animation\09-Animation.cpp(1711,13): warning C4101: 'translate_temp': variable local sin referencia
+glad.lib(glad.obj) : warning LNK4099: no se encontró PDB 'glad.pdb' con 'glad.lib(glad.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glad.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(init.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(init.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(window.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(window.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(input.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(input.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(context.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(context.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_time.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_time.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_thread.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_thread.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(platform.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(platform.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(monitor.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(monitor.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(vulkan.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(vulkan.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_init.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_init.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(null_init.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(null_init.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_module.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_module.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_window.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_window.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_monitor.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_monitor.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(win32_joystick.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(win32_joystick.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(wgl_context.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(wgl_context.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(egl_context.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(egl_context.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(null_monitor.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(null_monitor.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(null_window.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(null_window.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(null_joystick.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(null_joystick.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+glfw3.lib(osmesa_context.obj) : warning LNK4099: no se encontró PDB 'glfw3.pdb' con 'glfw3.lib(osmesa_context.obj)' o en 'C:\Users\denis\source\repos\proyectografica\bin\glfw3.pdb'; se vinculará el objeto sin tener en cuenta información de depuración
+LINK : warning LNK4098: la biblioteca predeterminada'MSVCRT' entra en conflicto con otras bibliotecas; use la biblioteca /NODEFAULTLIB:biblioteca
   Project1.vcxproj -> C:\Users\denis\source\repos\proyectografica\bin\Project1.exe

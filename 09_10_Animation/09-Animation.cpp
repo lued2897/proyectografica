@@ -284,7 +284,7 @@ glm::vec3 trebol(glm::vec3 translate,float time, float radius, float height) {
 	
 	return translate;
 }
-//movimiento del delfin
+//movimiento Anillo Sinusoidal 
 glm::vec3 anilloSinusoidal(glm::vec3 center, float t, float radius, float amplitude, float n)
 {
 	float x = center.x + radius * cos(t);
@@ -314,6 +314,23 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	R[2] = glm::vec4(forward, 0.0f);  // forward, si tu delfín mira hacia +Z
 	return R;
 }
+
+//Creación de peces.
+	struct FishPath {
+		glm::vec3 center;
+		float radius;
+		float amplitude;
+		float n;             // número de ondas
+		float speed;         // qué tan rápido recorre el anillo
+		float directionSign; // +1 o -1 (sentido)
+		float phase;         // desfase inicial
+		float time;          // tiempo acumulado
+	};
+
+	const int NUM_PECES = 30;
+	std::vector<FishPath> gFishes;
+	const float PI = 3.14159265359f;
+
 
 
 //para cambiar la cancion
@@ -547,6 +564,50 @@ bool Start() {
 		float y = 0.0f;                                                     // piso
 
 		algaPositions.push_back(glm::vec3(x, y, z));
+	}
+	// ================== Inicializar peces en anillos sinusoidales ==================
+	{
+		gFishes.clear();
+		gFishes.resize(NUM_PECES);
+
+		for (int i = 0; i < NUM_PECES; ++i) {
+			FishPath& F = gFishes[i];
+
+			// ----- Centro aleatorio -----
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // [0,1]
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -50.0f + rx * 100.0f;  // [-50, 50]
+			float cz = -50.0f + rz * 100.0f;  // [-50, 50]
+			float cy = 5.0f + ry * 25.0f;   // [5, 30]
+
+			F.center = glm::vec3(cx, cy, cz);
+
+			// ----- Radio aleatorio entre 6 y 20 -----
+			float minRadius = 6.0f;
+			float maxRadius = 20.0f;
+			float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			F.radius = minRadius + r01 * (maxRadius - minRadius);
+
+			// Amplitud vertical
+			F.amplitude = 2.0f + 0.5f * (i % 3);
+
+			// Número de ondas
+			F.n = 1.0f + float(i % 4);
+
+			// Velocidad
+			F.speed = 0.2f + 0.05f * float(i % 5);
+
+			// Sentido (horario/antihorario)
+			F.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial
+			F.phase = (2.0f * PI / 5.0f) * float(i % 5);
+
+			// Tiempo
+			F.time = 0.0f;
+		}
 	}
 
 	glGenTextures(1, &textTexture);
@@ -1314,7 +1375,48 @@ bool Update() {
 			mantaraya->Draw(*dynamicShader);
 			//glUseProgram(0);
 
-			// ===== DELFINES EN ANILLO SINUSOIDAL =====
+			// ================== PECES EN ANILLOS SINUSOIDALES ===========================
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+
+			// (aquí asegúrate de que ya seteaste luces, material,
+			//  waterLevel, fog, etc. para dynamicShader)
+
+			for (int i = 0; i < NUM_PECES; ++i) {
+				FishPath& F = gFishes[i];
+
+				// Avanzar el tiempo de cada pez
+				F.time += deltaTime * F.speed;
+
+				// t con dirección y fase
+				float t = F.directionSign * F.time + F.phase;
+
+				// Posición actual y siguiente (para dirección)
+				glm::vec3 posNow = anilloSinusoidal(F.center, t, F.radius, F.amplitude, F.n);
+				glm::vec3 posNext = anilloSinusoidal(F.center, t + 0.05f * F.directionSign,
+					F.radius, F.amplitude, F.n);
+
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, posNow);
+
+				// Orientar para que mire en la dirección de su movimiento
+				glm::mat4 R = orientAlongPath(posNow, posNext);
+				model *= R;
+
+				// Corregir orientación del pez (gira 180° sobre Y)
+				model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+				// Escala del pez (ajusta si está muy grande o pequeño)
+				model = glm::scale(model, glm::vec3(0.002f)); // ejemplo
+
+				dynamicShader->setMat4("model", model);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pez->gBones);
+				pez->Draw(*dynamicShader);
+			}
+
+
+			// ===== DELFINES EN ANILLO SINUSOIDAL ===================================================
 			delfin->UpdateAnimation(deltaTime);
 			static float delfinTime = 0.0f;
 			delfinTime += deltaTime * 0.5f;   // velocidad de recorrido sobre la curva
