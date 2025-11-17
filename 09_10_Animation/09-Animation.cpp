@@ -1580,8 +1580,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (aquí asegúrate de que ya seteaste luces, material,
-				//  waterLevel, fog, etc. para dynamicShader)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_PECES; ++i) {
 					FishPath& F = gFishes[i];
@@ -1623,8 +1622,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (asegúrate que aquí antes ya configuraste las luces y materiales
-				// para dynamicShader, igual que para peces/delfines)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_MEDUSAS; ++i) {
 					MedusaPath& M = gMedusas[i];
@@ -1649,12 +1647,6 @@ bool Update() {
 					glm::mat4 R = orientAlongPath(posNow, posNext);
 					model *= R;
 
-					// Como la medusa normalmente cuelga "hacia abajo", puede que el modelo
-					// esté orientado en otro eje. Si la ves volteada o de lado,
-					// ajusta con una rotación extra, por ejemplo:
-					// model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					// o prueba en Y/Z según cómo esté el modelo.
-
 					// Escala (ajusta según tu modelo)
 					model = glm::scale(model, glm::vec3(0.002f)); // ejemplo
 
@@ -1672,8 +1664,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (asegúrate que antes de este bloque ya seteaste para dynamicShader:
-				//  luces, MaterialAmbientColor/Diffuse/Specular, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_PULPOS; ++i) {
 					PulpoPath& P = gPulpos[i];
@@ -1698,13 +1689,8 @@ bool Update() {
 					glm::mat4 R = orientAlongPath(posNow, posNext);
 					model *= R;
 
-					// Si el pulpo está orientado raro (de cabeza / de lado),
-					// aquí puedes corregirlo con una rotación fija extra, ejemplo:
-					// model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0,1,0));
-					// o en X/Z según cómo venga el modelo.
-
 					// Escala del pulpo (ajusta a tu escena)
-					model = glm::scale(model, glm::vec3(0.003f)); // ejemplo
+					model = glm::scale(model, glm::vec3(0.003f)); 
 
 					dynamicShader->setMat4("model", model);
 					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
@@ -1712,7 +1698,7 @@ bool Update() {
 				}
 			}
 
-			// ================== Inicializar calamares en anillos sinusoidales ==================
+			// ================== CALAMARES EN ANILLOS SINUSOIDALES ==================
 			{
 				calamar->UpdateAnimation(deltaTime);
 				// ================== CALAMARES EN ANILLOS SINUSOIDALES ==================
@@ -1720,10 +1706,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (Aquí asumo que ANTES ya hiciste:
-				//  - set de luces en dynamicShader
-				//  - MaterialAmbient/Diffuse/Specular
-				//  - cameraPos, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_CALAMARES; ++i) {
 					CalamarPath& C = gCalamares[i];
@@ -1749,7 +1732,6 @@ bool Update() {
 
 					// 1) Acostar al calamar (rotar sobre X)
 					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					//    Si se queda de panza arriba, prueba 90.0f en vez de -90.0f
 
 					model = glm::scale(model, glm::vec3(0.003f));
 
@@ -1766,8 +1748,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (Aquí asume que ANTES ya seteaste para dynamicShader:
-				//  luces, MaterialAmbient/Diffuse/Specular, cameraPos, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_MANTARAYAS; ++i) {
 					MantarayaPath& M = gMantarayas[i];
@@ -1809,8 +1790,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (Asegúrate que ANTES de esto ya configuraste en dynamicShader:
-				//  luces, MaterialAmbient/Diffuse/Specular, cameraPos, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_CABALLITOS; ++i) {
 					CaballitoPath& C = gCaballitos[i];
@@ -1835,11 +1815,10 @@ bool Update() {
 					glm::mat4 R = orientAlongPath(posNow, posNext);
 					model *= R;
 
-					// Si el caballito mira al revés (cola adelante),
-					// gira 180° en Y después de orientarlo:
+					// gira 90° en Y después de orientarlo:
 					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-					// Escala del caballito (ajusta según tu modelo)
+					// Escala del caballito 
 					model = glm::scale(model, glm::vec3(1.05f, 1.0f, 1.05f));
 
 					dynamicShader->setMat4("model", model);
@@ -1893,7 +1872,7 @@ bool Update() {
 
 					glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
 					glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
-					//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+					//       ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
 
 					glm::mat4 model2 = glm::mat4(1.0f);
 					model2 = glm::translate(model2, posNow2);
@@ -2046,10 +2025,7 @@ bool Update() {
 					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
 					cangrejo->Draw(*dynamicShader);
 				}
-}
-
-
-
+			}
 
 
 			// ================== DIBUJAR ALGAS 2D con iluminación =====================
@@ -2113,7 +2089,7 @@ bool Update() {
 				}
 			}
 			
-
+			//  ================ DIBUJAR BURBUJAS =========================================
 			{
 				// Activación del shader de las partículas
 				particlesShader->use();
