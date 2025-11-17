@@ -372,6 +372,19 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_CALAMARES = 10;
 	std::vector<CalamarPath> gCalamares;
 
+//Definición arreglo de Mantarayas
+	struct MantarayaPath {
+		glm::vec3 center;
+		float radius;
+		float amplitude;
+		float n;             // número de ondas
+		float speed;         // velocidad
+		float directionSign; // +1 o -1 (sentido)
+		float phase;         // desfase inicial
+		float time;          // tiempo acumulado
+	};
+	const int NUM_MANTARAYAS = 6;
+	std::vector<MantarayaPath> gMantarayas;
 
 
 
@@ -780,7 +793,6 @@ bool Start() {
 			float s01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 			C.speed = 0.05f + s01 * 0.10f;     // [0.05, 0.15]
 
-
 			// Sentido horario / antihorario
 			C.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
 
@@ -792,6 +804,53 @@ bool Start() {
 			C.time = 0.0f;
 		}
 	}
+	// ================== Inicializar mantarayas en anillos sinusoidales ==================
+	{
+		gMantarayas.clear();
+		gMantarayas.resize(NUM_MANTARAYAS);
+
+		for (int i = 0; i < NUM_MANTARAYAS; ++i) {
+			MantarayaPath& M = gMantarayas[i];
+
+			// Centro aleatorio: x,z ∈ [-50,50], y ∈ [7,20]
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -50.0f + rx * 100.0f;  // [-50, 50]
+			float cz = -50.0f + rz * 100.0f;  // [-50, 50]
+			float cy = 7.0f + ry * 13.0f;   // [7, 20]
+
+			M.center = glm::vec3(cx, cy, cz);
+
+			// Radio similar a peces/pulpos: 6 .. 25 aprox
+			float minRadius = 6.0f;
+			float maxRadius = 25.0f;
+			float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			M.radius = minRadius + r01 * (maxRadius - minRadius);
+
+			// Amplitud vertical (flotan suave)
+			M.amplitude = 1.0f + 0.5f * (i % 3); // ~1.0, 1.5, 2.0
+
+			// Número de ondas
+			M.n = 1.0f + float(i % 3); // 1,2,3
+
+			// Velocidad media: 0.1 .. 0.35 aprox
+			float s01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			M.speed = 0.1f + s01 * 0.25f;
+
+			// Sentido horario / antihorario
+			M.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial para separarlas
+			const float PI = 3.14159265359f;
+			M.phase = (2.0f * PI / NUM_MANTARAYAS) * float(i);
+
+			// Tiempo inicial
+			M.time = 0.0f;
+		}
+	}
+
 
 
 	glGenTextures(1, &textTexture);
@@ -1422,50 +1481,7 @@ bool Update() {
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
 			cangrejo->Draw(*dynamicShader);
-			//glUseProgram(0);
-
-			
-			//calamar->UpdateAnimation(deltaTime);
-
-			/*dynamicShader->setFloat("time", proceduralTime);
-			dynamicShader->setFloat("radius", 35.0f);
-			dynamicShader->setFloat("height", 7.0f);*/
-
-			//dynamicShader->use();
-			/*
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-
-
-			model = glm::mat4(1.0f);
-			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 20.0, 16.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
-			calamar->Draw(*dynamicShader); 
-			//glUseProgram(0); 
-			
-
-			mantaraya->UpdateAnimation(deltaTime);
-
-			/*dynamicShader->setFloat("time", proceduralTime);
-			dynamicShader->setFloat("radius", 40.0f);
-			dynamicShader->setFloat("height", 5.0f);*/
-
-			//dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			model = glm::mat4(1.0f);
-			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 12.0, 16.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, mantaraya->gBones);
-			mantaraya->Draw(*dynamicShader);
-			//glUseProgram(0);
+			//glUseProgram(0);			
 
 			// ================== PECES EN ANILLOS SINUSOIDALES ===========================
 			{
@@ -1645,18 +1661,58 @@ bool Update() {
 					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 					//    Si se queda de panza arriba, prueba 90.0f en vez de -90.0f
 
-					// 2) (Opcional) Si la cabeza mira al revés, mantén o ajusta este giro en Y:
-					//model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
 					model = glm::scale(model, glm::vec3(0.003f));
 
 					dynamicShader->setMat4("model", model);
 					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
 					calamar->Draw(*dynamicShader);
 				}
-
-
 			}
+
+			// ================== MANTARAYAS EN ANILLOS SINUSOIDALES ==================
+			{
+				mantaraya->UpdateAnimation(deltaTime);
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+
+				// (Aquí asume que ANTES ya seteaste para dynamicShader:
+				//  luces, MaterialAmbient/Diffuse/Specular, cameraPos, waterLevel, fog, etc.)
+
+				for (int i = 0; i < NUM_MANTARAYAS; ++i) {
+					MantarayaPath& M = gMantarayas[i];
+
+					// Avanzar el tiempo de cada mantarraya
+					M.time += deltaTime * M.speed;
+
+					// t con dirección y fase
+					float t = M.directionSign * M.time + M.phase;
+
+					// Posición actual y siguiente en el anillo
+					glm::vec3 posNow = anilloSinusoidal(M.center, t,
+						M.radius, M.amplitude, M.n);
+					glm::vec3 posNext = anilloSinusoidal(M.center,
+						t + 0.05f * M.directionSign,
+						M.radius, M.amplitude, M.n);
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+					model *= R;
+
+					//Girar 180° en Y para que la cabeza apunte en la dirección de avance
+					model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+					// Escala grande para que se vea
+					model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));
+
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, mantaraya->gBones);
+					mantaraya->Draw(*dynamicShader);
+				}
+			}
+
 
 			// ===== DELFINES EN ANILLO SINUSOIDAL ===================================================
 			delfin->UpdateAnimation(deltaTime);
