@@ -413,6 +413,37 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_CANGREJOS = 8;
 	std::vector<CangrejoPath> gCangrejos;
 
+//Definición arreglo de tortugas
+	struct TortugaPath {
+		glm::vec3 center;   // centro del "trébol"
+		float a;            // parámetro 1 de la curva (radio principal)
+		float b;            // parámetro 2 de la curva
+		float speed;        // velocidad sobre la trayectoria
+		float directionSign;// +1 o -1 (sentido)
+		float phase;        // desfase inicial
+		float time;         // tiempo acumulado
+	};
+	const int NUM_TORTUGAS = 5;
+	std::vector<TortugaPath> gTortugas;
+
+	// Corrección fija del modelo de tortuga:
+	// - La acostamos (-90° en X, como cuando la dibujabas estática)
+	// - La giramos en Y para que mire hacia adelante (+Z local)
+	glm::mat4 turtleCorrection = [] {
+		glm::mat4 m(1.0f);
+
+		// Igual que antes: acostar la tortuga
+		m = glm::rotate(m, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+		// Si todavía la ves mirando mal, cambia 90.0f por -90.0f o 180.0f.
+		//m = glm::rotate(m, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		//m = glm::rotate(m, glm::radians(-180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		return m;
+		}();
+
+
 
 
 //para cambiar la cancion
@@ -1001,6 +1032,48 @@ bool Start() {
 			C.time = 0.0f;
 		}
 	}
+	// ================== Inicializar tortugas (trayectoria tipo trébol) ==================
+	{
+		gTortugas.clear();
+		gTortugas.resize(NUM_TORTUGAS);
+
+		for (int i = 0; i < NUM_TORTUGAS; ++i) {
+			TortugaPath& T = gTortugas[i];
+
+			// Centro aleatorio: x,z ∈ [-50,50], y ∈ [25,35]
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -50.0f + rx * 100.0f;  // [-50, 50]
+			float cz = -50.0f + rz * 100.0f;  // [-50, 50]
+			float cy = 25.0f + ry * 10.0f;   // [25, 35]
+
+			T.center = glm::vec3(cx, cy, cz);
+
+			// Parámetros del trébol (tamaño de la figura)
+			float r01a = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float r01b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			T.a = 4.0f + r01a * 4.0f;  // ~[4, 8]
+			T.b = 5.0f + r01b * 5.0f;  // ~[5,10]
+
+			// Velocidad lenta 
+			float s01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			T.speed = 0.05f + s01 * 0.05f;   // [0.05, 0.10]
+
+			// Sentido horario / antihorario
+			T.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial para que no vayan pegadas
+			const float PI = 3.14159265359f;
+			T.phase = (2.0f * PI / NUM_TORTUGAS) * float(i);
+
+			// Tiempo inicial
+			T.time = 0.0f;
+		}
+	}
+
 
 	glGenTextures(1, &textTexture);
 	glBindTexture(GL_TEXTURE_2D, textTexture);
@@ -1505,20 +1578,56 @@ bool Update() {
 			proceduralShader->setFloat("transparency", material01.transparency);
 
 			proceduralShader->setVec3("cameraPos", camera.Position);
-			proceduralShader->setFloat("waterLevel", 0.0f); // adjust if needed
-			proceduralShader->setFloat("fogDensity", 0.03f);
+			proceduralShader->setFloat("waterLevel", 0.0f);
+			proceduralShader->setFloat("fogDensity", 0.005f);
 			proceduralShader->setFloat("depthAttenuation", 0.0f);
 			proceduralShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 			proceduralShader->setFloat("caustic_intensity", 1.0f);
 
-			proceduralShader->setFloat("time", proceduralTime);
-			proceduralShader->setFloat("radius", 20.0f);
-			proceduralShader->setFloat("height", 20.0f);
+			// ================== TORTUGAS EN TRAYECTORIA TIPO TRÉBOL ==================
+			{
+				proceduralShader->use();
+				proceduralShader->setMat4("projection", projection);
+				proceduralShader->setMat4("view", view);
 
-			//moon->Draw(*proceduralShader);
-			tortuga->Draw(*proceduralShader);
+				// Luces, material, agua, fog, etc. (esto ya lo tienes configurado igual que antes)
 
-			
+				// IMPORTANTE: DESACTIVAR la animación de vértices tipo trébol
+				proceduralShader->setInt("useTrefoil", 0);
+				proceduralShader->setFloat("time", 0.0f);
+				proceduralShader->setFloat("radius", 0.0f);
+				proceduralShader->setFloat("height", 0.0f);
+
+				for (int i = 0; i < NUM_TORTUGAS; ++i) {
+					TortugaPath& T = gTortugas[i];
+
+					// Avanzar el tiempo de cada tortuga
+					T.time += deltaTime * T.speed;
+
+					// t con dirección y fase
+					float t = T.directionSign * T.time + T.phase;
+
+					// Posición actual y siguiente sobre la curva de trébol (CPU)
+					glm::vec3 posNow = trebol(T.center, t, T.a, T.b);
+					glm::vec3 posNext = trebol(T.center, t + 0.05f * T.directionSign,
+						T.a, T.b);
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+
+					// Orientación según la trayectoria
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+
+					// Combinamos orientación del camino + corrección fija de la tortuga
+					model *= R * turtleCorrection;
+
+					// Escala del modelo de tortuga
+					model = glm::scale(model, glm::vec3(1.0f));
+
+					proceduralShader->setMat4("model", model);
+					tortuga->Draw(*proceduralShader);  // Modelo estático, sin gBones
+				}
+			}
 
 		}
 
