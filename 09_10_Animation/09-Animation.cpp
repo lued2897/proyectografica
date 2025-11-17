@@ -466,6 +466,18 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_ALGAS3D_EXTRA = 100;
 	std::vector<glm::vec3> gAlgas3DExtra;
 
+	// ================== BASURA: varios objetos ==================
+	struct TrashInstance {
+		Model* model;        // modelo a dibujar (bolsa, tenedor, etc.)
+		glm::vec3 position;  // posición en el mundo
+		float rotateX;       // rotación en X
+		glm::vec3 scale;     // escala
+		bool active;         // true = se dibuja, false = ya se "recogió"
+	};
+	const int NUM_TRASH_PER_TYPE = 15;   // 10 por tipo
+	std::vector<TrashInstance> gTrash;   // todos los objetos de basura
+
+
 
 //para cambiar la cancion
 
@@ -599,6 +611,40 @@ bool Start() {
 		std::cout << "Termina basura" << std::endl;
 		//cofre = new Model("models/cofreahorasi.fbx");
 	}
+	// ================== Crear basura aleatoria ==================
+	{
+		// Usamos la misma semilla que ya estás usando para otras cosas
+		auto addTrashInstances = [&](Model* model, float rotX, glm::vec3 scale) {
+			for (int i = 0; i < NUM_TRASH_PER_TYPE; ++i) {
+				float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+				float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+				float x = -50.0f + rx * 100.0f; // [-50, 50]
+				float z = -50.0f + rz * 100.0f; // [-50, 50]
+
+				TrashInstance t;
+				t.model = model;
+				t.position = glm::vec3(x, 0.04f, z); // y = 0.04 fijo
+				t.rotateX = rotX;
+				t.scale = scale;
+				t.active = true;
+
+				gTrash.push_back(t);
+			}
+			};
+
+		// Escalas/rotaciones 
+		addTrashInstances(bolsa, -90.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+		addTrashInstances(tenedor, -90.0f, glm::vec3(0.055f, 0.055f, 0.055f));
+		addTrashInstances(cuchara, -90.0f, glm::vec3(0.105f, 0.105f, 0.105f));
+		addTrashInstances(lata, 0.0f, glm::vec3(0.105f, 0.105f, 0.105f));
+		addTrashInstances(popote, 0.0f, glm::vec3(0.1f, 0.1f, 1.0f));
+		addTrashInstances(plato, -90.0f, glm::vec3(0.30f, 0.30f, 0.30f));
+		addTrashInstances(botella_vidrio, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f));
+		addTrashInstances(botella_plastico, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f));
+		addTrashInstances(cigarro, 0.0f, glm::vec3(0.1f, 0.1f, 1.0f));
+	}
+
 	
 	{//Animales
 		std::cout << "Carga animales" << std::endl;
@@ -1461,202 +1507,37 @@ bool Update() {
 				bounding_boxes->Draw(*mLightsShader);
 			//boat->Draw(*mLightsShader);
 
-			//BASURA MAR
-			////Bolsa//
-			translate_temp = glm::vec3(-5.0f, 0.5f, 4.0f);
-			rotatex_temp = -90.0f;
-			scale_temp = glm::vec3(1.0f, 1.0f, 1.0f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_bolsa = false;
-				if (draw_bolsa)
-					bolsa->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_bolsa)
-					bolsa->Draw(*mLightsShader);
+			// ================== DIBUJAR TODA LA BASURA ==================
+			{
+				for (TrashInstance& t : gTrash) {
+					if (!t.active)
+						continue; // ya fue recogida
+
+					// Configuramos transformaciones y materiales base
+					prepareTrash(t.model, t.position, t.rotateX, t.scale);
+
+					bool isNear = nearTrash(camera.Position, t.position);
+
+					if (isNear) {
+						// Pintar en blanco
+						mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+						mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+						mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+						mLightsShader->setFloat("transparency", 1.0f);
+
+						// Si se presiona R, "recogemos" este objeto
+						if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+							t.active = false;
+							continue; // no lo dibujes este frame
+						}
+					}
+					// Dibujar el modelo si sigue activo
+					t.model->Draw(*mLightsShader);
+				}
+
 			}
 
 
-			//Tenedor
-			translate_temp = glm::vec3(-5.0f, 0.15f, 0.0f);
-			rotatex_temp = -90.0f;
-			scale_temp = glm::vec3(0.05f, 0.05f, 0.05f);
-			prepareTrash(tenedor,translate_temp,rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_tenedor = false;
-				if (draw_tenedor)
-					tenedor->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_tenedor)
-					tenedor->Draw(*mLightsShader);
-			}
-
-			//Cuchara
-			translate_temp = glm::vec3(0.0f, 0.0f, 5.0f);
-			rotatex_temp = -90.0f;
-			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_cuchara = false;
-				if (draw_cuchara)
-					cuchara->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_cuchara)
-					cuchara->Draw(*mLightsShader);
-			}
-
-			//tapa
-			translate_temp = glm::vec3(-10.0f, 0.0f, 0.0f);
-			rotatex_temp = 0.0f;
-			scale_temp = glm::vec3(0.0005f, 0.0005f, 0.0005f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_tapa = false;
-				if (draw_tapa)
-					tapa->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_tapa)
-					tapa->Draw(*mLightsShader);
-			}
-
-			//LATA
-			translate_temp = glm::vec3(10.0f, 0.0f, 0.0f);
-			rotatex_temp = 0.0f;
-			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_lata = false;
-				if (draw_lata)
-					lata->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_lata)
-					lata->Draw(*mLightsShader);
-			}
-
-			//POPOTE
-			translate_temp = glm::vec3(0.0f, 0.1f, -10.0f);
-			rotatex_temp = 0.0f;
-			scale_temp = glm::vec3(0.005f, 0.005f, 0.005f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_popote = false;
-				if(draw_popote)
-					popote->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_popote)
-					popote->Draw(*mLightsShader);
-			}
-
-			//PLATO
-			translate_temp = glm::vec3(0.0f, 0.2f, 10.0f);
-			rotatex_temp = -90.0f;
-			scale_temp = glm::vec3(0.3f, 0.3f, 0.3f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_plato = false;
-				if (draw_plato)
-					plato->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_plato)
-					plato->Draw(*mLightsShader);
-			}
-
-			//botella vidrio
-			translate_temp = glm::vec3(-10.0f, 0.0f, -10.0f);
-			rotatex_temp = -90.0f;
-			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_botella_vidrio = false;
-				if (draw_botella_vidrio)
-					botella_vidrio->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_botella_vidrio)
-					botella_vidrio->Draw(*mLightsShader);
-			}
-
-			//Botella plastico
-			translate_temp = glm::vec3(-5.0f, 0.0f, -5.0f);
-			rotatex_temp = -90.0f;
-			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_botella_plastico = false;
-				if (draw_botella_plastico)
-					botella_plastico->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_botella_plastico)
-					botella_plastico->Draw(*mLightsShader);
-			}
-
-			//ESTRELLA
-			/*
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-3.0f, -0.1f, 3.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
-			mLightsShader->setMat4("model", model);
-			// Aplicamos propiedades materiales
-			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
-			estrella->Draw(*mLightsShader);
-			*/
 			// ================= DIBUJAR VARIAS ESTRELLAS ===========================
 			{
 				for (const glm::vec3& pos : gEstrellasExtra) {
@@ -1677,33 +1558,11 @@ bool Update() {
 			}
 			//glUseProgram(0);
 
-			//CIGARRO
-			translate_temp = glm::vec3(0.0f, 0.15f, -5.0f);
-			rotatex_temp = 0.0f;
-			scale_temp = glm::vec3(0.03f, 0.03f, 0.03f);
-			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
-			if (nearTrash(camera.Position, translate_temp)) {
-				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
-				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
-				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
-				mLightsShader->setFloat("transparency", 1.0);
-				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-					draw_cigarro = false;
-				if (draw_cigarro)
-					cigarro->Draw(*mLightsShader);
-			}
-			else {
-				if (draw_cigarro)
-					cigarro->Draw(*mLightsShader);
-			}
-
 			// ================= DIBUJAR VARIOS ERIZOS ===========================
 			{
 				for (const glm::vec3& pos : gErizos) {
 					model = glm::mat4(1.0f);
 					model = glm::translate(model, pos);
-					// misma orientación que la estrella original (acostada sobre el piso)
-					//model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
 
 					mLightsShader->setMat4("model", model);
@@ -1725,13 +1584,7 @@ bool Update() {
 				for (const glm::vec3& pos : gAlgas3DExtra) {
 					glm::mat4 model = glm::mat4(1.0f);
 					model = glm::translate(model, pos);
-
-					// Si tu alga3d original necesita alguna rotación para quedar “de pie”,
-					// copia aquí las mismas rotaciones que uses para la alga principal.
-					// Ejemplo (AJUSTA según tu escena/modelo real):
 					 model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1,0,0));
-
-					// Escala del modelo de alga3d
 					model = glm::scale(model, glm::vec3(2.0f)); // cambia si la ves muy grande/pequeña
 
 					mLightsShader->setMat4("model", model);
