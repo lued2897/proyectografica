@@ -279,7 +279,7 @@ int main()
 	return 0;
 
 }
-
+//movimiento Trebol
 glm::vec3 trebol(glm::vec3 translate,float time, float radius, float height) {
 	float t = time;
 
@@ -304,6 +304,7 @@ glm::vec3 anilloSinusoidal(glm::vec3 center, float t, float radius, float amplit
 
 	return glm::vec3(x, y, z);
 }
+//Calculo de orientación de la cara
 glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 {
 	glm::vec3 forward = glm::normalize(next - current); // dirección de avance
@@ -397,6 +398,73 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_MANTARAYAS = 6;
 	std::vector<MantarayaPath> gMantarayas;
 
+//Definición arreglo de caballitos
+	struct CaballitoPath {
+		glm::vec3 center;
+		float radius;
+		float amplitude;
+		float n;             // número de ondas
+		float speed;         // velocidad
+		float directionSign; // +1 o -1 (sentido)
+		float phase;         // desfase inicial
+		float time;          // tiempo acumulado
+	};
+	const int NUM_CABALLITOS = 20;
+	std::vector<CaballitoPath> gCaballitos;
+
+//Definición arreglo de cangrejos
+	struct CangrejoPath {
+		glm::vec3 center;   // centro del recorrido (en el piso)
+		glm::vec3 dir;      // dirección en XZ donde se mueven
+		float length;       // mitad del recorrido (de -length a +length)
+		float speed;        // qué tan rápido “camina”
+		float phase;        // desfase inicial
+		float time;         // tiempo acumulado
+	};
+	const int NUM_CANGREJOS = 8;
+	std::vector<CangrejoPath> gCangrejos;
+
+//Definición arreglo de tortugas
+	struct TortugaPath {
+		glm::vec3 center;   // centro del "trébol"
+		float a;            // parámetro 1 de la curva (radio principal)
+		float b;            // parámetro 2 de la curva
+		float speed;        // velocidad sobre la trayectoria
+		float directionSign;// +1 o -1 (sentido)
+		float phase;        // desfase inicial
+		float time;         // tiempo acumulado
+	};
+	const int NUM_TORTUGAS = 5;
+	std::vector<TortugaPath> gTortugas;
+
+	// Corrección fija del modelo de tortuga:
+	// - La acostamos (-90° en X, como cuando la dibujabas estática)
+	// - La giramos en Y para que mire hacia adelante (+Z local)
+	glm::mat4 turtleCorrection = [] {
+		glm::mat4 m(1.0f);
+
+		// Igual que antes: acostar la tortuga
+		m = glm::rotate(m, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+		// Si todavía la ves mirando mal, cambia 90.0f por -90.0f o 180.0f.
+		//m = glm::rotate(m, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		//m = glm::rotate(m, glm::radians(-180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		return m;
+		}();
+
+// Estrellas extra en el fondo
+	const int NUM_ESTRELLAS_EXTRA = 100;
+	std::vector<glm::vec3> gEstrellasExtra;
+
+// Erizos extra 
+	const int NUM_ERIZOS = 100;
+	std::vector<glm::vec3> gErizos;
+
+// Algas 3D extra fuera del área central
+	const int NUM_ALGAS3D_EXTRA = 100;
+	std::vector<glm::vec3> gAlgas3DExtra;
 
 
 //para cambiar la cancion
@@ -877,6 +945,232 @@ bool Start() {
 			M.time = 0.0f;
 		}
 	}
+	// ================== Inicializar caballitos en anillos sinusoidales ==================
+	{
+		gCaballitos.clear();
+		gCaballitos.resize(NUM_CABALLITOS);
+
+		for (int i = 0; i < NUM_CABALLITOS; ++i) {
+			CaballitoPath& C = gCaballitos[i];
+
+			// Centro aleatorio: x,z ∈ [-50,50], y ∈ [5,20]
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -50.0f + rx * 100.0f;  // [-50, 50]
+			float cz = -50.0f + rz * 100.0f;  // [-50, 50]
+			float cy = 2.0f + ry * 13.0f;   // [2, 15]
+
+			C.center = glm::vec3(cx, cy, cz);
+
+			// Radio similar a peces: 6 .. 25
+			float minRadius = 6.0f;
+			float maxRadius = 25.0f;
+			float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			C.radius = minRadius + r01 * (maxRadius - minRadius);
+
+			// Amplitud vertical (sube/baja un poquito)
+			C.amplitude = 1.0f + 0.5f * (i % 3); // ~1.0, 1.5, 2.0
+
+			// Número de ondas alrededor del anillo
+			C.n = 1.0f + float(i % 3); // 1,2,3
+
+			// Velocidad MUY baja: ~0.02 .. 0.08 aprox
+			float s01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			C.speed = 0.02f + s01 * 0.06f;   // [0.02, 0.08]
+
+			// Sentido horario / antihorario
+			C.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial (separarlos en la trayectoria)
+			const float PI = 3.14159265359f;
+			C.phase = (2.0f * PI / NUM_CABALLITOS) * float(i);
+
+			// Tiempo inicial
+			C.time = 0.0f;
+		}
+	}
+	// ================== Inicializar cangrejos (movimiento lineal) ==================
+	{
+		gCangrejos.clear();
+		gCangrejos.resize(NUM_CANGREJOS); // asegúrate que NUM_CANGREJOS == 7
+
+		for (int i = 0; i < NUM_CANGREJOS; ++i) {
+			CangrejoPath& C = gCangrejos[i];
+
+			// Valores manuales por cangrejo
+			switch (i) {
+			case 0:
+				C.center = glm::vec3(-35.0f, 0.003f, -20.0f);
+				C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f));   // mueve en X
+				C.length = 6.0f;
+				C.speed = 0.05f;   // lento
+				C.phase = 0.0f;
+				break;
+
+			case 1:
+				C.center = glm::vec3(-10.0f, 0.003f, -25.0f);
+				C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));   // mueve en Z
+				C.length = 5.0f;
+				C.speed = 0.06f;
+				C.phase = 1.0f;    // desfase para no ir igual que el 0
+				break;
+
+			case 2:
+				C.center = glm::vec3(15.0f, 0.005f, -15.0f);
+				C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f));   // diagonal
+				C.length = 4.0f;
+				C.speed = 0.07f;
+				C.phase = 2.0f;
+				break;
+
+			case 3:
+				C.center = glm::vec3(20.0f, 0.005f, 0.0f);
+				C.dir = glm::normalize(glm::vec3(-1.0f, 0.0f, 1.0f));  // diagonal
+				C.length = 7.0f;
+				C.speed = 0.08f;
+				C.phase = 0.5f;
+				break;
+
+			case 4:
+				C.center = glm::vec3(-25.0f, 0.005f, 15.0f);
+				C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));  // diagonal
+				C.length = 5.5f;
+				C.speed = 0.06f;
+				C.phase = 1.5f;
+				break;
+
+			case 5:
+				C.center = glm::vec3(5.0f, 0.005f, 25.0f);
+				C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f));  // en Z
+				C.length = 6.5f;
+				C.speed = 0.09f;
+				C.phase = 2.5f;
+				break;
+
+			case 6:
+				C.center = glm::vec3(40.0f, 0.005f, 10.0f);
+				C.dir = glm::normalize(glm::vec3(-1.0f, 0.0f, 0.3f));  // leve diagonal
+				C.length = 7.0f;
+				C.speed = 0.1f;
+				C.phase = 3.0f;
+				break;
+			case 7:
+				C.center = glm::vec3(0.0f, 0.005f, 0.0f);
+				C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));  // en Z
+				C.length = 6.5f;
+				C.speed = 0.09f;
+				C.phase = 2.5f;
+				break;
+			}
+
+			// Tiempo inicial
+			C.time = 0.0f;
+		}
+	}
+	// ================== Inicializar tortugas (trayectoria tipo trébol) ==================
+	{
+		gTortugas.clear();
+		gTortugas.resize(NUM_TORTUGAS);
+
+		for (int i = 0; i < NUM_TORTUGAS; ++i) {
+			TortugaPath& T = gTortugas[i];
+
+			// Centro aleatorio: x,z ∈ [-50,50], y ∈ [25,35]
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -50.0f + rx * 100.0f;  // [-50, 50]
+			float cz = -50.0f + rz * 100.0f;  // [-50, 50]
+			float cy = 25.0f + ry * 10.0f;   // [25, 35]
+
+			T.center = glm::vec3(cx, cy, cz);
+
+			// Parámetros del trébol (tamaño de la figura)
+			float r01a = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float r01b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			T.a = 4.0f + r01a * 4.0f;  // ~[4, 8]
+			T.b = 5.0f + r01b * 5.0f;  // ~[5,10]
+
+			// Velocidad lenta 
+			float s01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			T.speed = 0.05f + s01 * 0.05f;   // [0.05, 0.10]
+
+			// Sentido horario / antihorario
+			T.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial para que no vayan pegadas
+			const float PI = 3.14159265359f;
+			T.phase = (2.0f * PI / NUM_TORTUGAS) * float(i);
+
+			// Tiempo inicial
+			T.time = 0.0f;
+		}
+	}
+	// ================== Inicializar posiciones de estrellas extra ==================
+	{
+		gEstrellasExtra.clear();
+		gEstrellasExtra.reserve(NUM_ESTRELLAS_EXTRA);
+
+		for (int i = 0; i < NUM_ESTRELLAS_EXTRA; ++i) {
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float x = -60.0f + rx * 120.0f;  // [-60, 60]
+			float z = -60.0f + rz * 120.0f;  // [-60, 60]
+			float y = 0.05f;                  // altura fija
+
+			gEstrellasExtra.emplace_back(x, y, z);
+		}
+	}
+	// ================== Inicializar posiciones de erizos ==================
+	{
+		gErizos.clear();
+		gErizos.reserve(NUM_ERIZOS);
+
+		for (int i = 0; i < NUM_ERIZOS; ++i) {
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float x = -60.0f + rx * 120.0f;  // [-60, 60]
+			float z = -60.0f + rz * 120.0f;  // [-60, 60]
+			float y = 0.03f;                 // altura fija
+
+			gErizos.emplace_back(x, y, z);
+		}
+	}
+
+	// ================== Inicializar posiciones de algas3d extra ==================
+	{
+		gAlgas3DExtra.clear();
+		gAlgas3DExtra.reserve(NUM_ALGAS3D_EXTRA);
+
+		for (int i = 0; i < NUM_ALGAS3D_EXTRA; ++i) {
+			float x, z;
+			float y = 0.0f; // y = 0
+
+			// Generar una posición fuera del área x,z ∈ [-60,60]
+			// Usamos un rango más grande y rechazamos las que caen en el cuadrado central.
+			while (true) {
+				float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+				float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+				// Rango amplio, por ejemplo [-150, 150]
+				x = -150.0f + rx * 300.0f; // [-150, 150]
+				z = -150.0f + rz * 300.0f; // [-150, 150]
+
+				// Condición: fuera del cuadrado [-60,60] x [-60,60]
+				if (std::abs(x) > 60.0f || std::abs(z) > 60.0f) {
+					break;
+				}
+			}
+
+			gAlgas3DExtra.emplace_back(x, y, z);
+		}
+	}
 
 
 
@@ -1350,6 +1644,7 @@ bool Update() {
 			}
 
 			//ESTRELLA
+			/*
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(-3.0f, -0.1f, 3.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -1361,6 +1656,25 @@ bool Update() {
 			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
 			mLightsShader->setFloat("transparency", material01.transparency);
 			estrella->Draw(*mLightsShader);
+			*/
+			// ================= DIBUJAR VARIAS ESTRELLAS ===========================
+			{
+				for (const glm::vec3& pos : gEstrellasExtra) {
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, pos);
+					// misma orientación que la estrella original (acostada sobre el piso)
+					model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+
+					mLightsShader->setMat4("model", model);
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					estrella->Draw(*mLightsShader);
+				}
+			}
 			//glUseProgram(0);
 
 			//CIGARRO
@@ -1383,18 +1697,56 @@ bool Update() {
 					cigarro->Draw(*mLightsShader);
 			}
 
-			//mLightsShader->use();
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-12.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
-			mLightsShader->setMat4("model", model);
-			// Aplicamos propiedades materiales
-			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
-			erizo->Draw(*mLightsShader);
+			// ================= DIBUJAR VARIOS ERIZOS ===========================
+			{
+				for (const glm::vec3& pos : gErizos) {
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, pos);
+					// misma orientación que la estrella original (acostada sobre el piso)
+					//model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+
+					mLightsShader->setMat4("model", model);
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					erizo->Draw(*mLightsShader);
+				}
+			}
+
+			// ================== ALGAS 3D EXTRA ==================
+			{
+				// mLightsShader->use();
+				// mLightsShader->setMat4("projection", projection);
+				// mLightsShader->setMat4("view", view);
+
+				for (const glm::vec3& pos : gAlgas3DExtra) {
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, pos);
+
+					// Si tu alga3d original necesita alguna rotación para quedar “de pie”,
+					// copia aquí las mismas rotaciones que uses para la alga principal.
+					// Ejemplo (AJUSTA según tu escena/modelo real):
+					 model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1,0,0));
+
+					// Escala del modelo de alga3d
+					model = glm::scale(model, glm::vec3(2.0f)); // cambia si la ves muy grande/pequeña
+
+					mLightsShader->setMat4("model", model);
+
+					// Mismo material que estrella/erizo:
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					alga3d->Draw(*mLightsShader);
+				}
+			}
+
+
 			glUseProgram(0);
 
 		}
@@ -1440,20 +1792,56 @@ bool Update() {
 			proceduralShader->setFloat("transparency", material01.transparency);
 
 			proceduralShader->setVec3("cameraPos", camera.Position);
-			proceduralShader->setFloat("waterLevel", 0.0f); // adjust if needed
-			proceduralShader->setFloat("fogDensity", 0.03f);
+			proceduralShader->setFloat("waterLevel", 0.0f);
+			proceduralShader->setFloat("fogDensity", 0.005f);
 			proceduralShader->setFloat("depthAttenuation", 0.0f);
 			proceduralShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
 			proceduralShader->setFloat("caustic_intensity", 1.0f);
 
-			proceduralShader->setFloat("time", proceduralTime);
-			proceduralShader->setFloat("radius", 20.0f);
-			proceduralShader->setFloat("height", 20.0f);
+			// ================== TORTUGAS EN TRAYECTORIA TIPO TRÉBOL ==================
+			{
+				proceduralShader->use();
+				proceduralShader->setMat4("projection", projection);
+				proceduralShader->setMat4("view", view);
 
-			//moon->Draw(*proceduralShader);
-			tortuga->Draw(*proceduralShader);
+				// Luces, material, agua, fog, etc. (esto ya lo tienes configurado igual que antes)
 
-			
+				// IMPORTANTE: DESACTIVAR la animación de vértices tipo trébol
+				proceduralShader->setInt("useTrefoil", 0);
+				proceduralShader->setFloat("time", 0.0f);
+				proceduralShader->setFloat("radius", 0.0f);
+				proceduralShader->setFloat("height", 0.0f);
+
+				for (int i = 0; i < NUM_TORTUGAS; ++i) {
+					TortugaPath& T = gTortugas[i];
+
+					// Avanzar el tiempo de cada tortuga
+					T.time += deltaTime * T.speed;
+
+					// t con dirección y fase
+					float t = T.directionSign * T.time + T.phase;
+
+					// Posición actual y siguiente sobre la curva de trébol (CPU)
+					glm::vec3 posNow = trebol(T.center, t, T.a, T.b);
+					glm::vec3 posNext = trebol(T.center, t + 0.05f * T.directionSign,
+						T.a, T.b);
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+
+					// Orientación según la trayectoria
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+
+					// Combinamos orientación del camino + corrección fija de la tortuga
+					model *= R * turtleCorrection;
+
+					// Escala del modelo de tortuga
+					model = glm::scale(model, glm::vec3(1.0f));
+
+					proceduralShader->setMat4("model", model);
+					tortuga->Draw(*proceduralShader);  // Modelo estático, sin gBones
+				}
+			}
 
 		}
 
@@ -1463,11 +1851,6 @@ bool Update() {
 		// ================================================ DIBUJAR OBJETOS ANIMADOS =========================================
 
 		{
-			character01->UpdateAnimation(deltaTime);
-			//pez->UpdateAnimation(deltaTime);
-			//tortuga->UpdateAnimation(deltaTime);
-			//cangrejo->UpdateAnimation(deltaTime);
-
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			// Activación del shader del personaje
@@ -1511,61 +1894,7 @@ bool Update() {
 			dynamicShader->setFloat("fogDensity", 0.03f);
 			dynamicShader->setFloat("depthAttenuation", 0.0f);
 			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
-			dynamicShader->setFloat("caustic_intensity", 1.0f);
-
-
-
-			// Dibujamos el modelo
-			//character01->Draw(*dynamicShader);
-
-			/*AnimatedModel* pez;
-			AnimatedModel* tortuga;
-			AnimatedModel* medusa;
-			AnimatedModel* pulpo;
-			AnimatedModel* calamar;
-			AnimatedModel* estrella;
-			AnimatedModel* mantaraya;
-			AnimatedModel* caballito;
-			AnimatedModel* delfin;
-			AnimatedModel* cangrejo;*/
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, character01->gBones);
-			//character01->Draw(*dynamicShader);
-			//glUseProgram(0);
-
-
-			caballito->UpdateAnimation(deltaTime);
-			//dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			model = glm::mat4(1.0f);
-			glm::vec3 translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 1.0, 1.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(1.001f, 1.001f, 1.001f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, caballito->gBones);
-			caballito->Draw(*dynamicShader);
-			//glUseProgram(0);
-
-
-			cangrejo->UpdateAnimation(deltaTime);
-
-			/*dynamicShader->setFloat("time", proceduralTime);
-			dynamicShader->setFloat("radius", 2.0f);
-			dynamicShader->setFloat("height", 1.0f);*/
-
-			//dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			model = glm::mat4(1.0f);
-			translate = trebol(glm::vec3(0.0f, 0.0f, 0.0f), proceduralTime, 1.0, 0.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
-			cangrejo->Draw(*dynamicShader);
-			//glUseProgram(0);			
+			dynamicShader->setFloat("caustic_intensity", 1.0f);		
 
 			// ================== PECES EN ANILLOS SINUSOIDALES ===========================
 			{
@@ -1574,8 +1903,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (aquí asegúrate de que ya seteaste luces, material,
-				//  waterLevel, fog, etc. para dynamicShader)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_PECES; ++i) {
 					FishPath& F = gFishes[i];
@@ -1617,8 +1945,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (asegúrate que aquí antes ya configuraste las luces y materiales
-				// para dynamicShader, igual que para peces/delfines)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_MEDUSAS; ++i) {
 					MedusaPath& M = gMedusas[i];
@@ -1643,12 +1970,6 @@ bool Update() {
 					glm::mat4 R = orientAlongPath(posNow, posNext);
 					model *= R;
 
-					// Como la medusa normalmente cuelga "hacia abajo", puede que el modelo
-					// esté orientado en otro eje. Si la ves volteada o de lado,
-					// ajusta con una rotación extra, por ejemplo:
-					// model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					// o prueba en Y/Z según cómo esté el modelo.
-
 					// Escala (ajusta según tu modelo)
 					model = glm::scale(model, glm::vec3(0.002f)); // ejemplo
 
@@ -1666,8 +1987,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (asegúrate que antes de este bloque ya seteaste para dynamicShader:
-				//  luces, MaterialAmbientColor/Diffuse/Specular, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_PULPOS; ++i) {
 					PulpoPath& P = gPulpos[i];
@@ -1692,13 +2012,8 @@ bool Update() {
 					glm::mat4 R = orientAlongPath(posNow, posNext);
 					model *= R;
 
-					// Si el pulpo está orientado raro (de cabeza / de lado),
-					// aquí puedes corregirlo con una rotación fija extra, ejemplo:
-					// model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0,1,0));
-					// o en X/Z según cómo venga el modelo.
-
 					// Escala del pulpo (ajusta a tu escena)
-					model = glm::scale(model, glm::vec3(0.003f)); // ejemplo
+					model = glm::scale(model, glm::vec3(0.003f)); 
 
 					dynamicShader->setMat4("model", model);
 					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
@@ -1706,7 +2021,7 @@ bool Update() {
 				}
 			}
 
-			// ================== Inicializar calamares en anillos sinusoidales ==================
+			// ================== CALAMARES EN ANILLOS SINUSOIDALES ==================
 			{
 				calamar->UpdateAnimation(deltaTime);
 				// ================== CALAMARES EN ANILLOS SINUSOIDALES ==================
@@ -1714,10 +2029,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (Aquí asumo que ANTES ya hiciste:
-				//  - set de luces en dynamicShader
-				//  - MaterialAmbient/Diffuse/Specular
-				//  - cameraPos, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_CALAMARES; ++i) {
 					CalamarPath& C = gCalamares[i];
@@ -1743,7 +2055,6 @@ bool Update() {
 
 					// 1) Acostar al calamar (rotar sobre X)
 					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					//    Si se queda de panza arriba, prueba 90.0f en vez de -90.0f
 
 					model = glm::scale(model, glm::vec3(0.003f));
 
@@ -1760,8 +2071,7 @@ bool Update() {
 				dynamicShader->setMat4("projection", projection);
 				dynamicShader->setMat4("view", view);
 
-				// (Aquí asume que ANTES ya seteaste para dynamicShader:
-				//  luces, MaterialAmbient/Diffuse/Specular, cameraPos, waterLevel, fog, etc.)
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
 
 				for (int i = 0; i < NUM_MANTARAYAS; ++i) {
 					MantarayaPath& M = gMantarayas[i];
@@ -1796,173 +2106,250 @@ bool Update() {
 					mantaraya->Draw(*dynamicShader);
 				}
 			}
+			// ================== CABALLITOS EN ANILLOS SINUSOIDALES ==================
+			{
+				caballito->UpdateAnimation(deltaTime);
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
 
+				// Ya estan estableciadas las luces, material,  waterLevel, fog, etc. para dynamicShader)
+
+				for (int i = 0; i < NUM_CABALLITOS; ++i) {
+					CaballitoPath& C = gCaballitos[i];
+
+					// Avanzar el tiempo de cada caballito
+					C.time += deltaTime * C.speed * 0.5f; // aún más lento
+
+					// t con dirección y fase
+					float t = C.directionSign * C.time + C.phase;
+
+					// Posición actual y siguiente en la curva
+					glm::vec3 posNow = anilloSinusoidal(C.center, t,
+						C.radius, C.amplitude, C.n);
+					glm::vec3 posNext = anilloSinusoidal(C.center,
+						t + 0.05f * C.directionSign,
+						C.radius, C.amplitude, C.n);
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+
+					// Orientación para que mire en la dirección de su movimiento
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+					model *= R;
+
+					// gira 90° en Y después de orientarlo:
+					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+					// Escala del caballito 
+					model = glm::scale(model, glm::vec3(1.05f, 1.0f, 1.05f));
+
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, caballito->gBones);
+					caballito->Draw(*dynamicShader);
+				}
+			}
 
 			// ===== DELFINES EN ANILLO SINUSOIDAL ===================================================
-			delfin->UpdateAnimation(deltaTime);
-			static float delfinTime = 0.0f;
-			delfinTime += deltaTime * 0.5f;   // velocidad de recorrido sobre la curva
-			dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			// -------- Delfín 1: sentido "normal" --------
 			{
+				delfin->UpdateAnimation(deltaTime);
 				static float delfinTime = 0.0f;
-				delfinTime += deltaTime * 0.5f;
+				delfinTime += deltaTime * 0.5f;   // velocidad de recorrido sobre la curva
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+				// -------- Delfín 1: sentido "normal" --------
+				{
+					static float delfinTime = 0.0f;
+					delfinTime += deltaTime * 0.5f;
 
-				glm::vec3 centroDelfin1 = glm::vec3(-10.0f, 5.0f, -10.0f);
-				float radius1 = 8.0f;
-				float amplitude1 = 2.0f;
-				float n1 = 2.0f;
+					glm::vec3 centroDelfin1 = glm::vec3(-10.0f, 5.0f, -10.0f);
+					float radius1 = 8.0f;
+					float amplitude1 = 2.0f;
+					float n1 = 2.0f;
 
-				float t1 = delfinTime;
+					float t1 = delfinTime;
 
-				glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
-				glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
+					glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
+					glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
 
-				glm::mat4 model1 = glm::mat4(1.0f);
-				model1 = glm::translate(model1, posNow1);
+					glm::mat4 model1 = glm::mat4(1.0f);
+					model1 = glm::translate(model1, posNow1);
 
-				glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
-				model1 *= R1;
+					glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
+					model1 *= R1;
 
-				model1 = glm::scale(model1, glm::vec3(0.001f));
-				dynamicShader->setMat4("model", model1);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
-				delfin->Draw(*dynamicShader);
-			}
-			// -------- Delfín 2: mismo recorrido pero al revés --------
-			{
-				glm::vec3 centroDelfin2 = glm::vec3(-10.0f, 7.5f, -10.0f); // un poco más alto
-				float radius2 = 10.0f;  // anillo más grande
-				float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
-				float n2 = 2.0f;
+					model1 = glm::scale(model1, glm::vec3(0.001f));
+					dynamicShader->setMat4("model", model1);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+					delfin->Draw(*dynamicShader);
+				}
+				// -------- Delfín 2: mismo recorrido pero al revés --------
+				{
+					glm::vec3 centroDelfin2 = glm::vec3(-10.0f, 7.5f, -10.0f); // un poco más alto
+					float radius2 = 10.0f;  // anillo más grande
+					float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
+					float n2 = 2.0f;
 
-				float t2 = -delfinTime;    // recorre la curva al revés
+					float t2 = -delfinTime;    // recorre la curva al revés
 
-				glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
-				glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
-				//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+					glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
+					glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
+					//       ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
 
-				glm::mat4 model2 = glm::mat4(1.0f);
-				model2 = glm::translate(model2, posNow2);
+					glm::mat4 model2 = glm::mat4(1.0f);
+					model2 = glm::translate(model2, posNow2);
 
-				glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
-				model2 *= R2;
+					glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
+					model2 *= R2;
 
-				model2 = glm::scale(model2, glm::vec3(0.001f));
-				dynamicShader->setMat4("model", model2);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
-				delfin->Draw(*dynamicShader);
-			}
-			// -------- Delfín 3 --------
-			{
-				glm::vec3 centroDelfin2 = glm::vec3(0.0f, 10.0f, 30.0f); // un poco más alto
-				float radius2 = 10.0f;  // anillo más grande
-				float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
-				float n2 = 2.0f;
+					model2 = glm::scale(model2, glm::vec3(0.001f));
+					dynamicShader->setMat4("model", model2);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+					delfin->Draw(*dynamicShader);
+				}
+				// -------- Delfín 3 --------
+				{
+					glm::vec3 centroDelfin2 = glm::vec3(0.0f, 10.0f, 30.0f); // un poco más alto
+					float radius2 = 10.0f;  // anillo más grande
+					float amplitude2 = 1.5f;   // un poco menos de oscilación vertical
+					float n2 = 2.0f;
 
-				float t2 = -delfinTime;    // recorre la curva al revés
+					float t2 = -delfinTime;    // recorre la curva al revés
 
-				glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
-				glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
-				//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+					glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
+					glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
+					//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
 
-				glm::mat4 model2 = glm::mat4(1.0f);
-				model2 = glm::translate(model2, posNow2);
+					glm::mat4 model2 = glm::mat4(1.0f);
+					model2 = glm::translate(model2, posNow2);
 
-				glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
-				model2 *= R2;
+					glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
+					model2 *= R2;
 
-				model2 = glm::scale(model2, glm::vec3(0.001f));
-				dynamicShader->setMat4("model", model2);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
-				delfin->Draw(*dynamicShader);
-			}
-			// -------- Delfín 4 --------
-			{
-				static float delfinTime = 0.0f;
-				delfinTime += deltaTime * 0.5f;
+					model2 = glm::scale(model2, glm::vec3(0.001f));
+					dynamicShader->setMat4("model", model2);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+					delfin->Draw(*dynamicShader);
+				}
+				// -------- Delfín 4 --------
+				{
+					static float delfinTime = 0.0f;
+					delfinTime += deltaTime * 0.5f;
 
-				glm::vec3 centroDelfin1 = glm::vec3(0.0f, 8.0f, 30.0f);
-				float radius1 = 8.0f;
-				float amplitude1 = 2.0f;
-				float n1 = 2.0f;
+					glm::vec3 centroDelfin1 = glm::vec3(0.0f, 8.0f, 30.0f);
+					float radius1 = 8.0f;
+					float amplitude1 = 2.0f;
+					float n1 = 2.0f;
 
-				float t1 = delfinTime;
+					float t1 = delfinTime;
 
-				glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
-				glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
+					glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
+					glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
 
-				glm::mat4 model1 = glm::mat4(1.0f);
-				model1 = glm::translate(model1, posNow1);
+					glm::mat4 model1 = glm::mat4(1.0f);
+					model1 = glm::translate(model1, posNow1);
 
-				glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
-				model1 *= R1;
+					glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
+					model1 *= R1;
 
-				model1 = glm::scale(model1, glm::vec3(0.001f));
-				dynamicShader->setMat4("model", model1);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
-				delfin->Draw(*dynamicShader);
-			}
-			// ===== DELFINES VUELTA EN ANILLO SINUSOIDAL =====
-			delfin2->UpdateAnimation(deltaTime);
-			static float delfinTime2 = 0.0f;
-			delfinTime2 += deltaTime * 0.3f;   // velocidad de recorrido sobre la curva
-			dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			// -------- Delfín 1: sentido "normal" --------
-			{
+					model1 = glm::scale(model1, glm::vec3(0.001f));
+					dynamicShader->setMat4("model", model1);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin->gBones);
+					delfin->Draw(*dynamicShader);
+				}
+				// ===== DELFINES VUELTA EN ANILLO SINUSOIDAL =====
+				delfin2->UpdateAnimation(deltaTime);
 				static float delfinTime2 = 0.0f;
-				delfinTime2 += deltaTime * 0.5f;
+				delfinTime2 += deltaTime * 0.3f;   // velocidad de recorrido sobre la curva
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+				// -------- Delfín 1: sentido "normal" --------
+				{
+					static float delfinTime2 = 0.0f;
+					delfinTime2 += deltaTime * 0.5f;
 
-				glm::vec3 centroDelfin1 = glm::vec3(20.0f, 10.0f, -5.0f);
-				float radius1 = 6.0f;
-				float amplitude1 = 1.0f;
-				float n1 = 1.0f;
+					glm::vec3 centroDelfin1 = glm::vec3(20.0f, 10.0f, -5.0f);
+					float radius1 = 6.0f;
+					float amplitude1 = 1.0f;
+					float n1 = 1.0f;
 
-				float t1 = delfinTime2;
+					float t1 = delfinTime2;
 
-				glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
-				glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
+					glm::vec3 posNow1 = anilloSinusoidal(centroDelfin1, t1, radius1, amplitude1, n1);
+					glm::vec3 posNext1 = anilloSinusoidal(centroDelfin1, t1 + 0.05f, radius1, amplitude1, n1);
 
-				glm::mat4 model1 = glm::mat4(1.0f);
-				model1 = glm::translate(model1, posNow1);
+					glm::mat4 model1 = glm::mat4(1.0f);
+					model1 = glm::translate(model1, posNow1);
 
-				glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
-				model1 *= R1;
+					glm::mat4 R1 = orientAlongPath(posNow1, posNext1);
+					model1 *= R1;
 
-				model1 = glm::scale(model1, glm::vec3(0.001f));
-				dynamicShader->setMat4("model", model1);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin2->gBones);
-				delfin2->Draw(*dynamicShader);
-			}
-			// -------- Delfín 2: mismo recorrido pero al revés --------
-			{
-				glm::vec3 centroDelfin2 = glm::vec3(20.0f, 8.0f, -5.0f); // un poco más alto
-				float radius2 = 9.0f;  // anillo más grande
-				float amplitude2 = 1.0f;   // un poco menos de oscilación vertical
-				float n2 = 1.0f;
+					model1 = glm::scale(model1, glm::vec3(0.001f));
+					dynamicShader->setMat4("model", model1);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin2->gBones);
+					delfin2->Draw(*dynamicShader);
+				}
+				// -------- Delfín 2: mismo recorrido pero al revés --------
+				{
+					glm::vec3 centroDelfin2 = glm::vec3(20.0f, 8.0f, -5.0f); // un poco más alto
+					float radius2 = 9.0f;  // anillo más grande
+					float amplitude2 = 1.0f;   // un poco menos de oscilación vertical
+					float n2 = 1.0f;
 
-				float t2 = -delfinTime2;    // recorre la curva al revés
+					float t2 = -delfinTime2;    // recorre la curva al revés
 
-				glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
-				glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
-				//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
+					glm::vec3 posNow2 = anilloSinusoidal(centroDelfin2, t2, radius2, amplitude2, n2);
+					glm::vec3 posNext2 = anilloSinusoidal(centroDelfin2, t2 - 0.05f, radius2, amplitude2, n2);
+					//                                ^ ojo: t2 - 0.05f para que mire en la dirección de su movimiento inverso
 
-				glm::mat4 model2 = glm::mat4(1.0f);
-				model2 = glm::translate(model2, posNow2);
+					glm::mat4 model2 = glm::mat4(1.0f);
+					model2 = glm::translate(model2, posNow2);
 
-				glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
-				model2 *= R2;
+					glm::mat4 R2 = orientAlongPath(posNow2, posNext2);
+					model2 *= R2;
 
-				model2 = glm::scale(model2, glm::vec3(0.001f));
-				dynamicShader->setMat4("model", model2);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin2->gBones);
-				delfin2->Draw(*dynamicShader);
+					model2 = glm::scale(model2, glm::vec3(0.001f));
+					dynamicShader->setMat4("model", model2);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, delfin2->gBones);
+					delfin2->Draw(*dynamicShader);
+				}
 			}
 		
+			// ================== CANGREJOS CAMINANDO DE LADO A LADO ==================
+			{
+				cangrejo->UpdateAnimation(deltaTime);
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+
+				for (int i = 0; i < NUM_CANGREJOS; ++i) {
+					CangrejoPath& C = gCangrejos[i];
+
+					// Avanzar tiempo
+					C.time += deltaTime * C.speed;
+					float t = C.time + C.phase;
+
+					// Movimiento de ida y vuelta
+					float factor = sinf(t);                  // [-1,1]
+					glm::vec3 offset = C.dir * (factor * C.length);
+
+					glm::vec3 posNow = C.center + offset;
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+					model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+
+					// Escala
+					model = glm::scale(model, glm::vec3(0.008f));
+
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
+					cangrejo->Draw(*dynamicShader);
+				}
+			}
+
 
 			// ================== DIBUJAR ALGAS 2D con iluminación =====================
 			{
@@ -2024,7 +2411,8 @@ bool Update() {
 					algaMesh->Draw(*algaShader);
 				}
 			}
-
+			
+			//  ================ DIBUJAR BURBUJAS =========================================
 			{
 				// Activación del shader de las partículas
 				particlesShader->use();
