@@ -67,6 +67,8 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float elapsedTime = 0.0f;
 
+float angCofre = 0.0f;
+
 glm::vec3 position(0.0f,0.0f, 0.0f);
 glm::vec3 forwardView(0.0f, 0.0f, 1.0f);
 float     trdpersonOffset = 1.5f;
@@ -98,6 +100,8 @@ bool draw_cigarro = true;
 
 bool draw_colliders = false;
 
+bool girocofre = false;
+
 //Generación de algas aleatorias
 const int NUM_ALGAS = 200;
 std::vector<glm::vec3> algaPositions;
@@ -113,6 +117,8 @@ Shader *dynamicShader;
 Shader* algaShader; // Shader Animación de algas
 
 Shader* fullscreenShader; //UI
+
+Shader* fresnelShader;
 
 
 // ---------------------------------- Pariculas ----------------------------------
@@ -161,6 +167,9 @@ Model *plato;
 Model *botella_vidrio;
 Model *botella_plastico;
 Model *cofre;
+Model* cofre_sup;
+Model* cofre_inf;
+Model* monkey;
 
 // Modelos animados
 AnimatedModel   *character01;
@@ -181,6 +190,8 @@ AnimatedModel	*cangrejo;
 Model			*erizo;
 
 AnimatedModel* diver;
+AnimatedModel* diver_walk;
+AnimatedModel* diver_idle;
 
 
 float tradius = 10.0f;
@@ -444,6 +455,7 @@ bool Start() {
 	wavesShader = new Shader("shaders/13_wavesAnimation.vs", "shaders/13_wavesAnimation.fs");
 	cubemapShader = new Shader("shaders/10_vertex_cubemap.vs", "shaders/10_fragment_cubemap.fs");
 	dynamicShader = new Shader("shaders/10_vertex_skinning-IT.vs", "shaders/10_fragment_skinning-IT.fs");
+	fresnelShader = new Shader("shaders/11_fresnel.vs", "shaders/11_fresnel.fs");
 
 	//algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/13_algaAnimation.fs"); // Shader Animación de algas
 	algaShader = new Shader("shaders/13_algaAnimation.vs", "shaders/10_fragment_skinning-IT.fs");
@@ -464,6 +476,7 @@ bool Start() {
 	bounding_boxes_agua = new Model("models/bounding_boxes_terrain.fbx");
 	bounding_boxes_agua->calculateAABB();
 	// ---------------------------------- Terreno playa ----------------------------------
+	std::cout << "Carga terreno playa \n" << std::endl;
 	beach_terrain = new Model("models/beach_terrain.fbx");
 	bounding_boxes_playa = new Model("models/bounding_boxes_playa.fbx");
 	bounding_boxes_playa->calculateAABB();
@@ -472,7 +485,7 @@ bool Start() {
 	decor = new Model("models/decor.fbx");
 	//boat = new Model("models/boat.fbx");
 	moon = new Model("models/IllumModels/moon.fbx");
-	gridMesh = new Model("models/IllumModels/grid.fbx");
+	gridMesh = new Model("models/plano_mar.fbx");
 	std::cout << "Cofre lalo" << std::endl;
 	//chest = new Model("models/untitled.fbx");
 	std::cout << "Fin Cofre lalo" << std::endl;
@@ -506,6 +519,15 @@ bool Start() {
 		std::cout << "9" << std::endl;
 		botella_plastico = new Model("models/botellaplastico.fbx");
 		std::cout << "10" << std::endl;
+		cofre_inf = new Model("models/cofre_inf.fbx");
+		std::cout << "11" << std::endl;
+		cofre_sup = new Model("models/cofre_sup.fbx");
+		std::cout << "12" << std::endl;
+		monkey = new Model("models/monkey.fbx");
+			monkey->material.ambient = glm::vec4(0.24725f, 	0.1995f, 	0.0745f,1.0f);
+			monkey->material.diffuse = glm::vec4(0.75164f, 	0.60648f, 	0.22648f, 1.0f);
+			monkey->material.specular = glm::vec4(0.628281f, 	0.555802f, 	0.366065f, 1.0f);
+			monkey->material.alphaIndex = 25; //oro
 		std::cout << "Termina basura" << std::endl;
 		//cofre = new Model("models/cofreahorasi.fbx");
 	}
@@ -536,6 +558,11 @@ bool Start() {
 		std::cout << "11" << std::endl;
 		diver = new AnimatedModel("models/diver_swim.fbx");
 		std::cout << "12" << std::endl;
+		diver_walk = new AnimatedModel("models/diver_walk.fbx");
+		std::cout << "13" << std::endl;
+		diver_idle = new AnimatedModel("models/diver_idle.fbx");
+		std::cout << "14" << std::endl;
+
 		delfin2 = new AnimatedModel("models/DolphinFinal_Animate3.fbx");
 		std::cout << "Termina animales" << std::endl;
 
@@ -897,6 +924,18 @@ bool Start() {
 }
 //final Start
 
+bool ismoving(GLFWwindow* window) {
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS or 
+		glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS or
+		glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS or
+		glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 void SetLightUniformInt(Shader* shader, const char* propertyName, size_t lightIndex, int value) {
 	std::ostringstream ss;
 	ss << "allLights[" << lightIndex << "]." << propertyName;
@@ -925,6 +964,7 @@ void SetLightUniformVec3(Shader* shader, const char* propertyName, size_t lightI
 
 	shader->setVec3(uniformName.c_str(), value);
 }
+
 
 
 void prepareTrash(Model* object, glm::vec3 translate, float rotatex, glm::vec3 scale) {
@@ -995,35 +1035,78 @@ bool Update() {
 
 		glm::mat4 model = glm::mat4(1.0f);
 
-		// Ajuste: posición un poco más abajo y enfrente de la cámara
-		glm::vec3 offset = glm::vec3(0.0f, -0.5f, 1.5f); // bajamos Y a 0.3, enfrente 0.5
-		model = glm::translate(model, position + offset);
+		
+		if (submarino) {
+			// Ajuste: posición un poco más abajo y enfrente de la cámara
+			glm::vec3 offset = glm::vec3(0.0f, -0.5f, 0.0f); // bajamos Y a 0.3, enfrente 0.5
+			model = glm::translate(model, position + offset);
 
-		// Ajuste: rotar hacia donde mira la cámara, pero mostrando la espalda
-		float angle = atan2(forwardView.x, forwardView.z);
-		model = glm::rotate(model, glm::radians(rotateCharacter+180.0f), glm::vec3(0.0, 1.0f, 0.0f));
-		model = glm::rotate(model, angle + glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			// Ajuste: rotar hacia donde mira la cámara, pero mostrando la espalda
+			float angle = atan2(forwardView.x, forwardView.z);
+			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::rotate(model, angle + glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-		// Mantener la escala que ya tenías
-		model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+			// Mantener la escala que ya tenías
+			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
 
-		dynamicShader->setMat4("model", model);
-		dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, diver->gBones);
+			dynamicShader->setMat4("model", model);
+			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, diver->gBones);
 
-		diver->UpdateAnimation(deltaTime);
-		diver->Draw(*dynamicShader);
+			diver->UpdateAnimation(deltaTime);
+			diver->Draw(*dynamicShader);
+			glUseProgram(0);
+		}
+		else {
+			// Ajuste: posición un poco más abajo y enfrente de la cámara
+			glm::vec3 offset = glm::vec3(0.0f, -0.5f, 0.0f); // bajamos Y a 0.3, enfrente 0.5
+			model = glm::translate(model, position + offset);
+
+			// Ajuste: rotar hacia donde mira la cámara, pero mostrando la espalda
+			float angle = atan2(forwardView.x, forwardView.z);
+			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
+			model = glm::rotate(model, angle + glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			// Mantener la escala que ya tenías
+			model = glm::scale(model, glm::vec3(0.0065f, 0.0065f, 0.0065f));
+
+			dynamicShader->setMat4("model", model);
+
+			dynamicShader->setFloat("waterLevel", 0.0f); // adjust if needed
+			dynamicShader->setFloat("fogDensity", 0.00f);
+			dynamicShader->setFloat("depthAttenuation", 0.0f);
+			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.0f, 0.0f));
+			dynamicShader->setFloat("caustic_intensity", 0.0f);
+
+			//std::cout << "mamada 1" << std::endl;
+			if (ismoving(window)) {
+				//std::cout << "mamada 2" << std::endl;
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, diver_walk->gBones);
+				diver_walk->UpdateAnimation(deltaTime);
+				diver_walk->Draw(*dynamicShader);
+			}
+			else {
+				//std::cout << "mamada 3" << std::endl;
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, diver_idle->gBones);
+				diver_idle->UpdateAnimation(deltaTime);
+				diver_idle->Draw(*dynamicShader);
+			}
+			
+			glUseProgram(0);
+		}
+		
 
 	}
 
 	
 	
-	
+	//--------------------ESCENA AGUA---------------------
 	if (submarino) {
 		// Cubemap (fondo)
 		{
 			mainCubeMap->drawCubeMap(*cubemapShader, projection, view);
 		}
 		bounding_boxes = bounding_boxes_agua;
+		//bounding_boxes->aabbs = bounding_boxes_agua->aabbs;
 		{
 			
 
@@ -1084,6 +1167,7 @@ bool Update() {
 				bounding_boxes->Draw(*mLightsShader);
 			//boat->Draw(*mLightsShader);
 
+			//BASURA MAR
 			////Bolsa//
 			translate_temp = glm::vec3(-5.0f, 0.5f, 4.0f);
 			rotatex_temp = -90.0f;
@@ -1996,7 +2080,43 @@ bool Update() {
 		{
 			beachCubeMap->drawCubeMap(*cubemapShader, projection, view);
 		}
+		//pruebas fresnel
+		{
+			// Activamos el shader de Phong
+			fresnelShader->use();
+
+			// Activamos para objetos transparentes
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			// Aplicamos transformaciones de proyección y cámara (si las hubiera)
+			fresnelShader->setMat4("projection", projection);
+			fresnelShader->setMat4("view", view);
+
+			// Aplicamos transformaciones del modelo
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+			fresnelShader->setMat4("model", model);
+
+			fresnelShader->setVec3("cameraPosition", camera.Position);
+			fresnelShader->setFloat("mRefractionRatio", 1.0f / 1.333f); // keep
+			fresnelShader->setFloat("_Bias", 0.02f);   // less base reflection
+			fresnelShader->setFloat("_Scale", 0.7f);   // strong fresnel edge
+			fresnelShader->setFloat("_Power", 5.0f);   // fast falloff
+			fresnelShader->setFloat("time", wavesTime);
+			wavesTime += 0.01;
+
+			gridMesh->Draw(*fresnelShader);
+
+
+		}
+
+		glUseProgram(0);
+
 		bounding_boxes = bounding_boxes_playa;
+		//bounding_boxes->aabbs = bounding_boxes_playa->aabbs;
 		mLightsShader->use();
 
 		// Activamos para objetos transparentes
@@ -2048,14 +2168,262 @@ bool Update() {
 		mLightsShader->setFloat("caustic_intensity", 0.0f);
 
 		beach_terrain->Draw(*mLightsShader);
+		if (draw_colliders)
+			bounding_boxes->Draw(*mLightsShader);
+
+		
+
+		{//basura playa
+			glm::vec3 translate_temp;
+			float rotatex_temp;
+			glm::vec3 scale_temp;
+
+			////Bolsa//
+			translate_temp = glm::vec3(-5.0f, 0.5f, 4.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(1.0f, 1.0f, 1.0f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_bolsa = false;
+				if (draw_bolsa)
+					bolsa->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_bolsa)
+					bolsa->Draw(*mLightsShader);
+			}
+
+
+			//Tenedor
+			translate_temp = glm::vec3(-5.0f, 0.15f, 0.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.05f, 0.05f, 0.05f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_tenedor = false;
+				if (draw_tenedor)
+					tenedor->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_tenedor)
+					tenedor->Draw(*mLightsShader);
+			}
+
+			//Cuchara
+			translate_temp = glm::vec3(0.0f, 0.0f, 5.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_cuchara = false;
+				if (draw_cuchara)
+					cuchara->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_cuchara)
+					cuchara->Draw(*mLightsShader);
+			}
+
+			//tapa
+			translate_temp = glm::vec3(-10.0f, 0.0f, 0.0f);
+			rotatex_temp = 0.0f;
+			scale_temp = glm::vec3(0.0005f, 0.0005f, 0.0005f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_tapa = false;
+				if (draw_tapa)
+					tapa->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_tapa)
+					tapa->Draw(*mLightsShader);
+			}
+
+			//LATA
+			translate_temp = glm::vec3(10.0f, 0.0f, 0.0f);
+			rotatex_temp = 0.0f;
+			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_lata = false;
+				if (draw_lata)
+					lata->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_lata)
+					lata->Draw(*mLightsShader);
+			}
+
+			//POPOTE
+			translate_temp = glm::vec3(0.0f, 0.1f, -10.0f);
+			rotatex_temp = 0.0f;
+			scale_temp = glm::vec3(0.005f, 0.005f, 0.005f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_popote = false;
+				if (draw_popote)
+					popote->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_popote)
+					popote->Draw(*mLightsShader);
+			}
+
+			//PLATO
+			translate_temp = glm::vec3(0.0f, 0.2f, 10.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.3f, 0.3f, 0.3f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_plato = false;
+				if (draw_plato)
+					plato->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_plato)
+					plato->Draw(*mLightsShader);
+			}
+
+			//botella vidrio
+			translate_temp = glm::vec3(-10.0f, 0.0f, -10.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_botella_vidrio = false;
+				if (draw_botella_vidrio)
+					botella_vidrio->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_botella_vidrio)
+					botella_vidrio->Draw(*mLightsShader);
+			}
+
+			//Botella plastico
+			translate_temp = glm::vec3(-5.0f, 0.0f, -5.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.1f, 0.1f, 0.1f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_botella_plastico = false;
+				if (draw_botella_plastico)
+					botella_plastico->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_botella_plastico)
+					botella_plastico->Draw(*mLightsShader);
+			}
+
+			//CIGARRO
+			translate_temp = glm::vec3(0.0f, 0.15f, -5.0f);
+			rotatex_temp = 0.0f;
+			scale_temp = glm::vec3(0.03f, 0.03f, 0.03f);
+			prepareTrash(tenedor, translate_temp, rotatex_temp, scale_temp);
+			if (nearTrash(camera.Position, translate_temp)) {
+				mLightsShader->setVec4("MaterialAmbientColor", WHITE);
+				mLightsShader->setVec4("MaterialDiffuseColor", WHITE);
+				mLightsShader->setVec4("MaterialSpecularColor", WHITE);
+				mLightsShader->setFloat("transparency", 1.0);
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					draw_cigarro = false;
+				if (draw_cigarro)
+					cigarro->Draw(*mLightsShader);
+			}
+			else {
+				if (draw_cigarro)
+					cigarro->Draw(*mLightsShader);
+			}
+			//COFRE
+			translate_temp = glm::vec3(-8.0f, 0.55f, -5.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.3f, 0.3f, 0.3f);
+			prepareTrash(cofre_inf, translate_temp, rotatex_temp, scale_temp);
+			cofre_inf->Draw(*mLightsShader);
+
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model,glm::vec3(-8.0f, 0.55f, -5.0f )); // translate it down so it's at the center of the scene
+
+			model = glm::rotate(model, glm::radians(-angCofre), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
+			mLightsShader->setMat4("model", model);
+			if (nearTrash(camera.Position, translate_temp)) {
+				if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+					girocofre = true;	
+			}
+			if (girocofre and angCofre < 90.0f) {
+				angCofre += 0.1;
+			}
+				
+			cofre_sup->Draw(*mLightsShader);
+
+			//chango
+			translate_temp = glm::vec3(-8.0f, 0.55f, -5.0f);
+			rotatex_temp = -90.0f;
+			scale_temp = glm::vec3(0.3f, 0.3f, 0.3f);
+			prepareTrash(monkey, translate_temp, rotatex_temp, scale_temp);
+			monkey->Draw(*mLightsShader);
+
+		}
 		glUseProgram(0);
+
+		
+
+
 
 		PlaySceneMusic("sounds/OlasdeSal.mp3"); // música playa
 
 
 	}
 	 
-
+	
 	// glfw: swap buffers 
 	glfwSwapBuffers(window);
 	glfwPollEvents();

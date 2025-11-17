@@ -12,17 +12,19 @@ uniform mat4 view;
 uniform mat4 projection;
 
 uniform float time;
-uniform float radius;
-uniform float height;
+uniform float radius=1.0; // wave frequency
+uniform float height = 0.01; // wave amplitude
 
 void main()
 {
-    
-    vec4 PosL = vec4(aPos, 1.0f);
-    PosL.z += 0.5f * sin(PosL.x + 0.001f*time);
-    PosL.z += 0.5f * sin(PosL.y + 0.001f*time);
+    vec4 PosL = vec4(aPos, 1.0);
+
+    float dist = length(PosL.xy);           // radial distance from center
+
+    // Waves moving INTO the center
+    PosL.z += 0.1275 * sin(dist * 1.0 + time * 0.03);
+    PosL.z += 0.0725 * sin(dist * 2.0 + time * 0.06);
 
     gl_Position = projection * view * model * PosL;
-
-    TexCoords = aTexCoords;  
+    TexCoords = aTexCoords;
 }

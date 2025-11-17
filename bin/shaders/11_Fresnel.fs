@@ -24,6 +24,8 @@ in float reflectionCoefficient;
 uniform samplerCube cubetex;
 uniform sampler2D texture_diffuse1;
 
+uniform float time;
+
 void main(void)
 {
 
@@ -36,8 +38,13 @@ void main(void)
 	refractedColor.b = textureCube( cubetex, vec3( vRefract[2].x, vRefract[2].yz ) ).b;
 
 	vec4 fresnelColor = reflectionCoefficient * reflectedColor + (1 - reflectionCoefficient) * refractedColor;
-	vec4 texel = texture(texture_diffuse1, TexCoords);
+	vec2 coordsT = TexCoords;
+    coordsT.x -= 0.003f * time;
+    coordsT.y -= 0.003f * time;
 
-	FragColor = fresnelColor;
+    vec4 texel = texture(texture_diffuse1, coordsT);
+
+	//FragColor = fresnelColor;
+	FragColor = mix(texel, fresnelColor, 0.65);
 	FragColor.a = 1.0f;
 }

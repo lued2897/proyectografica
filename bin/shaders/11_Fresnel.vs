@@ -1,6 +1,5 @@
 #version 330 core
 
-#extension GL_NV_shadow_samplers_cube : enable
 
 // Adaptation for OpenGL/GLSL by: PhD Sergio Teodoro-Vite
 // Based on: The CG Tutorial, Nvidia developer zone
@@ -27,6 +26,7 @@ uniform float mRefractionRatio;
 uniform float _Bias;
 uniform float _Scale;
 uniform float _Power;
+uniform float time;
 
 // Outgoing Fresnel reflection and refraction parameters
 out vec3  vReflect;
@@ -36,28 +36,46 @@ out float reflectionCoefficient;
 
 void main(void)
 {
-    vec4 in_Position = vec4(aPos,1.0f);
+    vec4 in_Position = vec4(aPos, 1.0);
 
-    gl_Position = projection * view * model * in_Position;  
+    // ------------------------------------------------------------
+    // 1) APPLY RADIAL WAVE DISPLACEMENT
+    // ------------------------------------------------------------
+    float dist = length(in_Position.xy);
 
-    // Position of the vertex, in worldspace : model * position
+    // Waves collapsing into the center:
+    in_Position.z += 0.05 * sin(dist * 0.5 + time * 0.03);
+
+    // (Optional: waves expanding outward)
+    // in_Position.z += waveHeight * sin(dist * waveRadius - time * 0.03);
+
+    // ------------------------------------------------------------
+    // 2) TRANSFORM AFTER DISPLACEMENT
+    // ------------------------------------------------------------
+    gl_Position = projection * view * model * in_Position;
+
+    // Position in world space after waves
     vec3 posWorld = (model * in_Position).xyz;
 
-    // worldNormal: is the world space normal of the current point
-    vec3 normWorld = normalize( mat3( model[0].xyz, model[1].xyz, model[2].xyz ) * aNormal );
+    // ------------------------------------------------------------
+    // 3) NORMAL RECOMPUTATION
+    // ------------------------------------------------------------
+    // Using the original normal – optional improvement: compute perturbed normal
+    vec3 normWorld = normalize(mat3(model) * aNormal);
 
-    // Fresnel calculations
-    // I is the vector from the eye to a point on the surface
+    // ------------------------------------------------------------
+    // 4) FRESNEL MATH (same as before)
+    // ------------------------------------------------------------
     vec3 I = normalize(posWorld - cameraPosition);
 
-    vReflect = reflect( I, normWorld );
-    vRefract[0] = refract( I, normWorld, mRefractionRatio * 1.0f ); // RED CHANNEL REFRACTION // 1.0
-    vRefract[1] = refract( I, normWorld, mRefractionRatio * 0.99f ); // GREEN CHANNEL REFRACTION // 0.99
-    vRefract[2] = refract( I, normWorld, mRefractionRatio * 0.98f ); // BLUE CHANNEL REFRACTION // 0.98
+    vReflect = reflect(I, normWorld);
 
-    // reflectionCoefficient:  Schlick Approximation
-    // An Approximation of the Fresnel Equation
-    reflectionCoefficient = max(0, min(1,_Bias + _Scale * pow( 1.0f + dot( I, normWorld ), _Power ))); // Fresnel equation
-    
+    vRefract[0] = refract(I, normWorld, mRefractionRatio * 1.00);
+    vRefract[1] = refract(I, normWorld, mRefractionRatio * 0.99);
+    vRefract[2] = refract(I, normWorld, mRefractionRatio * 0.98);
+
+    reflectionCoefficient =
+        clamp(_Bias + _Scale * pow(1.0 + dot(I, normWorld), _Power), 0.0, 1.0);
+
     TexCoords = aTexCoords;
 }
