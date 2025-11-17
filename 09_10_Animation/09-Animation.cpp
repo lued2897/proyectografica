@@ -679,16 +679,16 @@ bool Start() {
 	// Lights configuration
 	
 	Light light01;
-	light01.Position = glm::vec3(5.0f, 2.0f, 5.0f);
-	light01.Color = glm::vec4(0.2f, 0.0f, 0.0f, 1.0f);
+	light01.Position = glm::vec3(5.0f, 10.0f, 5.0f);
+	light01.Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 	gLights.push_back(light01);
 
 	Light light02;
-	light02.Position = glm::vec3(-5.0f, 2.0f, 5.0f);
-	light02.Color = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f);
+	light02.Position = glm::vec3(-5.0f, 10.0f, 5.0f);
+	light02.Color = glm::vec4(0.2f, 0.1f, 0.5f, 1.0f);
 	gLights.push_back(light02);
 
-	Light light03;
+	/*/Light light03;
 	light03.Position = glm::vec3(5.0f, 2.0f, -5.0f);
 	light03.Color = glm::vec4(0.0f, 0.0f, 0.2f, 1.0f);
 	gLights.push_back(light03);
@@ -696,7 +696,7 @@ bool Start() {
 	Light light04;
 	light04.Position = glm::vec3(-5.0f, 2.0f, -5.0f);
 	light04.Color = glm::vec4(0.2f, 0.2f, 0.0f, 1.0f);
-	gLights.push_back(light04);
+	gLights.push_back(light04);*/
 	
 
 	// Reproduce la canción en loop
