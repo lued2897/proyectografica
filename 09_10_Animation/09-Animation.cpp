@@ -451,6 +451,9 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_ERIZOS = 100;
 	std::vector<glm::vec3> gErizos;
 
+// Algas 3D extra fuera del área central
+	const int NUM_ALGAS3D_EXTRA = 100;
+	std::vector<glm::vec3> gAlgas3DExtra;
 
 
 //para cambiar la cancion
@@ -1113,6 +1116,36 @@ bool Start() {
 		}
 	}
 
+	// ================== Inicializar posiciones de algas3d extra ==================
+	{
+		gAlgas3DExtra.clear();
+		gAlgas3DExtra.reserve(NUM_ALGAS3D_EXTRA);
+
+		for (int i = 0; i < NUM_ALGAS3D_EXTRA; ++i) {
+			float x, z;
+			float y = 0.0f; // y = 0
+
+			// Generar una posición fuera del área x,z ∈ [-60,60]
+			// Usamos un rango más grande y rechazamos las que caen en el cuadrado central.
+			while (true) {
+				float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+				float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+				// Rango amplio, por ejemplo [-150, 150]
+				x = -150.0f + rx * 300.0f; // [-150, 150]
+				z = -150.0f + rz * 300.0f; // [-150, 150]
+
+				// Condición: fuera del cuadrado [-60,60] x [-60,60]
+				if (std::abs(x) > 60.0f || std::abs(z) > 60.0f) {
+					break;
+				}
+			}
+
+			gAlgas3DExtra.emplace_back(x, y, z);
+		}
+	}
+
+
 
 	glGenTextures(1, &textTexture);
 	glBindTexture(GL_TEXTURE_2D, textTexture);
@@ -1598,6 +1631,37 @@ bool Update() {
 					erizo->Draw(*mLightsShader);
 				}
 			}
+
+			// ================== ALGAS 3D EXTRA ==================
+			{
+				// mLightsShader->use();
+				// mLightsShader->setMat4("projection", projection);
+				// mLightsShader->setMat4("view", view);
+
+				for (const glm::vec3& pos : gAlgas3DExtra) {
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, pos);
+
+					// Si tu alga3d original necesita alguna rotación para quedar “de pie”,
+					// copia aquí las mismas rotaciones que uses para la alga principal.
+					// Ejemplo (AJUSTA según tu escena/modelo real):
+					 model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1,0,0));
+
+					// Escala del modelo de alga3d
+					model = glm::scale(model, glm::vec3(2.0f)); // cambia si la ves muy grande/pequeña
+
+					mLightsShader->setMat4("model", model);
+
+					// Mismo material que estrella/erizo:
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					alga3d->Draw(*mLightsShader);
+				}
+			}
+
 
 			glUseProgram(0);
 
