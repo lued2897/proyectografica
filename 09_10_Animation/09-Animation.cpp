@@ -443,6 +443,13 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 		return m;
 		}();
 
+// Estrellas extra en el fondo
+	const int NUM_ESTRELLAS_EXTRA = 100;
+	std::vector<glm::vec3> gEstrellasExtra;
+
+// Erizos extra 
+	const int NUM_ERIZOS = 100;
+	std::vector<glm::vec3> gErizos;
 
 
 
@@ -1073,6 +1080,38 @@ bool Start() {
 			T.time = 0.0f;
 		}
 	}
+	// ================== Inicializar posiciones de estrellas extra ==================
+	{
+		gEstrellasExtra.clear();
+		gEstrellasExtra.reserve(NUM_ESTRELLAS_EXTRA);
+
+		for (int i = 0; i < NUM_ESTRELLAS_EXTRA; ++i) {
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float x = -60.0f + rx * 120.0f;  // [-60, 60]
+			float z = -60.0f + rz * 120.0f;  // [-60, 60]
+			float y = 0.05f;                  // altura fija
+
+			gEstrellasExtra.emplace_back(x, y, z);
+		}
+	}
+	// ================== Inicializar posiciones de erizos ==================
+	{
+		gErizos.clear();
+		gErizos.reserve(NUM_ERIZOS);
+
+		for (int i = 0; i < NUM_ERIZOS; ++i) {
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float x = -60.0f + rx * 120.0f;  // [-60, 60]
+			float z = -60.0f + rz * 120.0f;  // [-60, 60]
+			float y = 0.03f;                 // altura fija
+
+			gErizos.emplace_back(x, y, z);
+		}
+	}
 
 
 	glGenTextures(1, &textTexture);
@@ -1488,6 +1527,7 @@ bool Update() {
 			}
 
 			//ESTRELLA
+			/*
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(-3.0f, -0.1f, 3.0f)); // translate it down so it's at the center of the scene
 			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -1499,6 +1539,25 @@ bool Update() {
 			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
 			mLightsShader->setFloat("transparency", material01.transparency);
 			estrella->Draw(*mLightsShader);
+			*/
+			// ================= DIBUJAR VARIAS ESTRELLAS ===========================
+			{
+				for (const glm::vec3& pos : gEstrellasExtra) {
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, pos);
+					// misma orientación que la estrella original (acostada sobre el piso)
+					model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+
+					mLightsShader->setMat4("model", model);
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					estrella->Draw(*mLightsShader);
+				}
+			}
 			//glUseProgram(0);
 
 			//CIGARRO
@@ -1521,18 +1580,25 @@ bool Update() {
 					cigarro->Draw(*mLightsShader);
 			}
 
-			//mLightsShader->use();
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-12.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
-			mLightsShader->setMat4("model", model);
-			// Aplicamos propiedades materiales
-			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-			mLightsShader->setFloat("transparency", material01.transparency);
-			erizo->Draw(*mLightsShader);
+			// ================= DIBUJAR VARIOS ERIZOS ===========================
+			{
+				for (const glm::vec3& pos : gErizos) {
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, pos);
+					// misma orientación que la estrella original (acostada sobre el piso)
+					//model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+
+					mLightsShader->setMat4("model", model);
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					erizo->Draw(*mLightsShader);
+				}
+			}
+
 			glUseProgram(0);
 
 		}
