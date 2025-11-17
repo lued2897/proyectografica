@@ -268,7 +268,7 @@ int main()
 	return 0;
 
 }
-
+//movimiento Trebol
 glm::vec3 trebol(glm::vec3 translate,float time, float radius, float height) {
 	float t = time;
 
@@ -293,6 +293,7 @@ glm::vec3 anilloSinusoidal(glm::vec3 center, float t, float radius, float amplit
 
 	return glm::vec3(x, y, z);
 }
+//Calculo de orientación de la cara
 glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 {
 	glm::vec3 forward = glm::normalize(next - current); // dirección de avance
@@ -399,6 +400,18 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	};
 	const int NUM_CABALLITOS = 20;
 	std::vector<CaballitoPath> gCaballitos;
+
+//Definición arreglo de cangrejos
+	struct CangrejoPath {
+		glm::vec3 center;   // centro del recorrido (en el piso)
+		glm::vec3 dir;      // dirección en XZ donde se mueven
+		float length;       // mitad del recorrido (de -length a +length)
+		float speed;        // qué tan rápido “camina”
+		float phase;        // desfase inicial
+		float time;         // tiempo acumulado
+	};
+	const int NUM_CANGREJOS = 8;
+	std::vector<CangrejoPath> gCangrejos;
 
 
 
@@ -910,8 +923,84 @@ bool Start() {
 			C.time = 0.0f;
 		}
 	}
+	// ================== Inicializar cangrejos (movimiento lineal) ==================
+	{
+		gCangrejos.clear();
+		gCangrejos.resize(NUM_CANGREJOS); // asegúrate que NUM_CANGREJOS == 7
 
+		for (int i = 0; i < NUM_CANGREJOS; ++i) {
+			CangrejoPath& C = gCangrejos[i];
 
+			// Valores manuales por cangrejo
+			switch (i) {
+			case 0:
+				C.center = glm::vec3(-35.0f, 0.003f, -20.0f);
+				C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f));   // mueve en X
+				C.length = 6.0f;
+				C.speed = 0.05f;   // lento
+				C.phase = 0.0f;
+				break;
+
+			case 1:
+				C.center = glm::vec3(-10.0f, 0.003f, -25.0f);
+				C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));   // mueve en Z
+				C.length = 5.0f;
+				C.speed = 0.06f;
+				C.phase = 1.0f;    // desfase para no ir igual que el 0
+				break;
+
+			case 2:
+				C.center = glm::vec3(15.0f, 0.005f, -15.0f);
+				C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f));   // diagonal
+				C.length = 4.0f;
+				C.speed = 0.07f;
+				C.phase = 2.0f;
+				break;
+
+			case 3:
+				C.center = glm::vec3(20.0f, 0.005f, 0.0f);
+				C.dir = glm::normalize(glm::vec3(-1.0f, 0.0f, 1.0f));  // diagonal
+				C.length = 7.0f;
+				C.speed = 0.08f;
+				C.phase = 0.5f;
+				break;
+
+			case 4:
+				C.center = glm::vec3(-25.0f, 0.005f, 15.0f);
+				C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));  // diagonal
+				C.length = 5.5f;
+				C.speed = 0.06f;
+				C.phase = 1.5f;
+				break;
+
+			case 5:
+				C.center = glm::vec3(5.0f, 0.005f, 25.0f);
+				C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f));  // en Z
+				C.length = 6.5f;
+				C.speed = 0.09f;
+				C.phase = 2.5f;
+				break;
+
+			case 6:
+				C.center = glm::vec3(40.0f, 0.005f, 10.0f);
+				C.dir = glm::normalize(glm::vec3(-1.0f, 0.0f, 0.3f));  // leve diagonal
+				C.length = 7.0f;
+				C.speed = 0.1f;
+				C.phase = 3.0f;
+				break;
+			case 7:
+				C.center = glm::vec3(0.0f, 0.005f, 0.0f);
+				C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));  // en Z
+				C.length = 6.5f;
+				C.speed = 0.09f;
+				C.phase = 2.5f;
+				break;
+			}
+
+			// Tiempo inicial
+			C.time = 0.0f;
+		}
+	}
 
 	glGenTextures(1, &textTexture);
 	glBindTexture(GL_TEXTURE_2D, textTexture);
@@ -1482,28 +1571,7 @@ bool Update() {
 			dynamicShader->setFloat("fogDensity", 0.03f);
 			dynamicShader->setFloat("depthAttenuation", 0.0f);
 			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.25f, 0.45f));
-			dynamicShader->setFloat("caustic_intensity", 1.0f);
-
-
-			cangrejo->UpdateAnimation(deltaTime);
-
-			/*dynamicShader->setFloat("time", proceduralTime);
-			dynamicShader->setFloat("radius", 2.0f);
-			dynamicShader->setFloat("height", 1.0f);*/
-
-			//dynamicShader->use();
-			glm::vec3 translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 1.0, 1.0);
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			model = glm::mat4(1.0f);
-			translate = trebol(glm::vec3(0.0f, 0.0f, 0.0f), proceduralTime, 1.0, 0.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
-			cangrejo->Draw(*dynamicShader);
-			//glUseProgram(0);			
+			dynamicShader->setFloat("caustic_intensity", 1.0f);		
 
 			// ================== PECES EN ANILLOS SINUSOIDALES ===========================
 			{
@@ -1947,6 +2015,42 @@ bool Update() {
 				}
 			}
 		
+			// ================== CANGREJOS CAMINANDO DE LADO A LADO ==================
+			{
+				cangrejo->UpdateAnimation(deltaTime);
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+
+				for (int i = 0; i < NUM_CANGREJOS; ++i) {
+					CangrejoPath& C = gCangrejos[i];
+
+					// Avanzar tiempo
+					C.time += deltaTime * C.speed;
+					float t = C.time + C.phase;
+
+					// Movimiento de ida y vuelta
+					float factor = sinf(t);                  // [-1,1]
+					glm::vec3 offset = C.dir * (factor * C.length);
+
+					glm::vec3 posNow = C.center + offset;
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+					model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+
+					// Escala
+					model = glm::scale(model, glm::vec3(0.008f));
+
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
+					cangrejo->Draw(*dynamicShader);
+				}
+}
+
+
+
+
 
 			// ================== DIBUJAR ALGAS 2D con iluminación =====================
 			{
