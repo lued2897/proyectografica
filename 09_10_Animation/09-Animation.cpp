@@ -326,12 +326,11 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 		float phase;         // desfase inicial
 		float time;          // tiempo acumulado
 	};
-
 	const int NUM_PECES = 30;
 	std::vector<FishPath> gFishes;
 	const float PI = 3.14159265359f;
 
-//Creacion de medusas
+//Creación de medusas
 	struct MedusaPath {
 		glm::vec3 center;
 		float radius;
@@ -342,9 +341,23 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 		float phase;         // desfase inicial
 		float time;          // tiempo acumulado
 	};
-
 	const int NUM_MEDUSAS = 10;
 	std::vector<MedusaPath> gMedusas;
+
+//Creación de pulos
+	struct PulpoPath {
+		glm::vec3 center;
+		float radius;
+		float amplitude;
+		float n;             // número de ondas
+		float speed;         // velocidad
+		float directionSign; // +1 o -1 (sentido)
+		float phase;         // desfase inicial
+		float time;          // tiempo acumulado
+	};
+	const int NUM_PULPOS = 10;
+	std::vector<PulpoPath> gPulpos;
+
 
 
 //para cambiar la cancion
@@ -669,6 +682,52 @@ bool Start() {
 			M.time = 0.0f;
 		}
 
+	}
+
+	// ================== Inicializar pulpos en anillos sinusoidales ==================
+	{
+		gPulpos.clear();
+		gPulpos.resize(NUM_PULPOS);
+
+		for (int i = 0; i < NUM_PULPOS; ++i) {
+			PulpoPath& P = gPulpos[i];
+
+			// Centro aleatorio: x,z ∈ [-50,50], y ∈ [7,20]
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -50.0f + rx * 100.0f;  // [-50, 50]
+			float cz = -50.0f + rz * 100.0f;  // [-50, 50]
+			float cy = 7.0f + ry * 13.0f;   // [7, 20]
+
+			P.center = glm::vec3(cx, cy, cz);
+
+			// Radio moderado, para que no se vayan lejísimos
+			float minRadius = 6.0f;
+			float maxRadius = 18.0f;
+			float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			P.radius = minRadius + r01 * (maxRadius - minRadius);
+
+			// Amplitud vertical (suaves, no mucho brinco)
+			P.amplitude = 1.0f + 0.5f * (i % 3); // ~1.0, 1.5, 2.0
+
+			// Número de ondas
+			P.n = 1.0f + float(i % 3); // 1,2,3
+
+			// Velocidad 0.03 .. 0.06 aprox
+			P.speed = 0.03f + 0.01f * float(i % 4); // 0.03 .. 0.06 aprox
+
+			// Sentido horario / antihorario
+			P.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial (separarlos en el anillo)
+			const float PI = 3.14159265359f;
+			P.phase = (2.0f * PI / NUM_PULPOS) * float(i);
+
+			// Tiempo acumulado
+			P.time = 0.0f;
+		}
 	}
 
 	glGenTextures(1, &textTexture);
@@ -1194,51 +1253,12 @@ bool Update() {
 		glUseProgram(0);
 
 
-		// Actividad 5.3
-		//
-		//{
-		//	// Activamos el shader de Phong
-		//	wavesShader->use();
-
-		//	// Activamos para objetos transparentes
-		//	glEnable(GL_BLEND);
-		//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		//	// Aplicamos transformaciones de proyección y cámara (si las hubiera)
-		//	wavesShader->setMat4("projection", projection);
-		//	wavesShader->setMat4("view", view);
-
-		//	// Aplicamos transformaciones del modelo
-		//	glm::mat4 model = glm::mat4(1.0f);
-		//	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		//	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//	model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-		//	wavesShader->setMat4("model", model);
-
-		//	wavesShader->setFloat("time", wavesTime);
-		//	wavesShader->setFloat("radius", 5.0f);
-		//	wavesShader->setFloat("height", 5.0f);
-
-		//	gridMesh->Draw(*wavesShader);
-		//	wavesTime += 0.01;
-		
-
-		//}
-
-		//glUseProgram(0);
-		//
-
-		// Objeto animado
+		// ================================================ DIBUJAR OBJETOS ANIMADOS =========================================
 
 		{
 			character01->UpdateAnimation(deltaTime);
 			//pez->UpdateAnimation(deltaTime);
 			//tortuga->UpdateAnimation(deltaTime);
-
-
-
-
-
 			//cangrejo->UpdateAnimation(deltaTime);
 
 			glEnable(GL_BLEND);
@@ -1340,25 +1360,6 @@ bool Update() {
 			cangrejo->Draw(*dynamicShader);
 			//glUseProgram(0);
 
-			pulpo->UpdateAnimation(deltaTime);
-
-			/*dynamicShader->setFloat("time", proceduralTime);
-			dynamicShader->setFloat("radius", 8.0f);
-			dynamicShader->setFloat("height", 10.0f);*/
-
-			//dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
-			model = glm::mat4(1.0f);
-			translate = trebol(glm::vec3(-3.0f, 2.0f, 0.0f), proceduralTime, 12.0, 6.0);
-			model = glm::translate(model, translate); // translate it down so it's at the center of the scene
-			model = glm::rotate(model, glm::radians(rotateCharacter + 180.0f), glm::vec3(0.0, 1.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
-			dynamicShader->setMat4("model", model);
-			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
-			pulpo->Draw(*dynamicShader);
-			//glUseProgram(0);
-
 			calamar->UpdateAnimation(deltaTime);
 
 			/*dynamicShader->setFloat("time", proceduralTime);
@@ -1400,44 +1401,46 @@ bool Update() {
 			//glUseProgram(0);
 
 			// ================== PECES EN ANILLOS SINUSOIDALES ===========================
-			pez->UpdateAnimation(deltaTime);
-			dynamicShader->use();
-			dynamicShader->setMat4("projection", projection);
-			dynamicShader->setMat4("view", view);
+			{
+				pez->UpdateAnimation(deltaTime);
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
 
-			// (aquí asegúrate de que ya seteaste luces, material,
-			//  waterLevel, fog, etc. para dynamicShader)
+				// (aquí asegúrate de que ya seteaste luces, material,
+				//  waterLevel, fog, etc. para dynamicShader)
 
-			for (int i = 0; i < NUM_PECES; ++i) {
-				FishPath& F = gFishes[i];
+				for (int i = 0; i < NUM_PECES; ++i) {
+					FishPath& F = gFishes[i];
 
-				// Avanzar el tiempo de cada pez
-				F.time += deltaTime * F.speed;
+					// Avanzar el tiempo de cada pez
+					F.time += deltaTime * F.speed;
 
-				// t con dirección y fase
-				float t = F.directionSign * F.time + F.phase;
+					// t con dirección y fase
+					float t = F.directionSign * F.time + F.phase;
 
-				// Posición actual y siguiente (para dirección)
-				glm::vec3 posNow = anilloSinusoidal(F.center, t, F.radius, F.amplitude, F.n);
-				glm::vec3 posNext = anilloSinusoidal(F.center, t + 0.05f * F.directionSign,
-					F.radius, F.amplitude, F.n);
+					// Posición actual y siguiente (para dirección)
+					glm::vec3 posNow = anilloSinusoidal(F.center, t, F.radius, F.amplitude, F.n);
+					glm::vec3 posNext = anilloSinusoidal(F.center, t + 0.05f * F.directionSign,
+						F.radius, F.amplitude, F.n);
 
-				glm::mat4 model = glm::mat4(1.0f);
-				model = glm::translate(model, posNow);
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
 
-				// Orientar para que mire en la dirección de su movimiento
-				glm::mat4 R = orientAlongPath(posNow, posNext);
-				model *= R;
+					// Orientar para que mire en la dirección de su movimiento
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+					model *= R;
 
-				// Corregir orientación del pez (gira 180° sobre Y)
-				model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+					// Corregir orientación del pez (gira 180° sobre Y)
+					model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-				// Escala del pez (ajusta si está muy grande o pequeño)
-				model = glm::scale(model, glm::vec3(0.002f)); // ejemplo
+					// Escala del pez (ajusta si está muy grande o pequeño)
+					model = glm::scale(model, glm::vec3(0.002f)); // ejemplo
 
-				dynamicShader->setMat4("model", model);
-				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pez->gBones);
-				pez->Draw(*dynamicShader);
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pez->gBones);
+					pez->Draw(*dynamicShader);
+				}
 			}
 
 			// ================== MEDUSAS EN ANILLOS SINUSOIDALES ==================
@@ -1489,6 +1492,52 @@ bool Update() {
 
 			}
 
+			// ================== PULPOS EN ANILLOS SINUSOIDALES ==================
+			{
+				pulpo->UpdateAnimation(deltaTime);
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+
+				// (asegúrate que antes de este bloque ya seteaste para dynamicShader:
+				//  luces, MaterialAmbientColor/Diffuse/Specular, waterLevel, fog, etc.)
+
+				for (int i = 0; i < NUM_PULPOS; ++i) {
+					PulpoPath& P = gPulpos[i];
+
+					// Avanzar el tiempo de cada pulpo
+					P.time += deltaTime * P.speed;
+
+					// t con dirección y fase
+					float t = P.directionSign * P.time + P.phase;
+
+					// Posición actual y siguiente en la trayectoria
+					glm::vec3 posNow = anilloSinusoidal(P.center, t,
+						P.radius, P.amplitude, P.n);
+					glm::vec3 posNext = anilloSinusoidal(P.center,
+						t + 0.05f * P.directionSign,
+						P.radius, P.amplitude, P.n);
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+
+					// Orientación para que mire en la dirección de su movimiento
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+					model *= R;
+
+					// Si el pulpo está orientado raro (de cabeza / de lado),
+					// aquí puedes corregirlo con una rotación fija extra, ejemplo:
+					// model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0,1,0));
+					// o en X/Z según cómo venga el modelo.
+
+					// Escala del pulpo (ajusta a tu escena)
+					model = glm::scale(model, glm::vec3(0.003f)); // ejemplo
+
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
+					pulpo->Draw(*dynamicShader);
+				}
+			}
 
 			// ===== DELFINES EN ANILLO SINUSOIDAL ===================================================
 			delfin->UpdateAnimation(deltaTime);
