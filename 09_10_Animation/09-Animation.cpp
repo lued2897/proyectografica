@@ -315,7 +315,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	return R;
 }
 
-//Creación de peces.
+//Definición arreglo de peces.
 	struct FishPath {
 		glm::vec3 center;
 		float radius;
@@ -330,7 +330,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	std::vector<FishPath> gFishes;
 	const float PI = 3.14159265359f;
 
-//Creación de medusas
+//Definición arreglo de medusas
 	struct MedusaPath {
 		glm::vec3 center;
 		float radius;
@@ -344,7 +344,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_MEDUSAS = 10;
 	std::vector<MedusaPath> gMedusas;
 
-//Creación de pulos
+//Definición arreglo de pulos
 	struct PulpoPath {
 		glm::vec3 center;
 		float radius;
@@ -357,6 +357,21 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	};
 	const int NUM_PULPOS = 10;
 	std::vector<PulpoPath> gPulpos;
+
+//Definición arreglo de calamares
+	struct CalamarPath {
+		glm::vec3 center;
+		float radius;
+		float amplitude;
+		float n;             // número de ondas
+		float speed;         // velocidad
+		float directionSign; // +1 o -1 (sentido)
+		float phase;         // desfase inicial
+		float time;          // tiempo acumulado
+	};
+	const int NUM_CALAMARES = 10;
+	std::vector<CalamarPath> gCalamares;
+
 
 
 
@@ -729,6 +744,55 @@ bool Start() {
 			P.time = 0.0f;
 		}
 	}
+
+	// ================== Inicializar calamares en anillos sinusoidales ==================
+	{
+		gCalamares.clear();
+		gCalamares.resize(NUM_CALAMARES);
+
+		for (int i = 0; i < NUM_CALAMARES; ++i) {
+			CalamarPath& C = gCalamares[i];
+
+			// Centro aleatorio: x,z ∈ [-20,20], y ∈ [15, 25]
+			float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+			float cx = -10.0f + rx * 20.0f;  // [-10, 10]
+			float cz = -10.0f + rz * 20.0f;  // [-10, 10]
+			float cy = 7.0f + ry * 17.0f;   // [7, 25]
+
+			C.center = glm::vec3(cx, cy, cz);
+
+			// Radio grande para que SIEMPRE naden fuera de x,z ∈ [-50,50]
+			float minRadius = 60.0f;
+			float maxRadius = 100.0f;  // puedes subir/bajar este máximo si quieres
+			float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			C.radius = minRadius + r01 * (maxRadius - minRadius);
+
+			// Amplitud vertical
+			C.amplitude = 1.0f + 0.7f * (i % 3); // ~1.0, 1.7, 2.4
+
+			// Número de ondas
+			C.n = 1.0f + float(i % 4); // 1,2,3,4
+
+			// Velocidad más lenta para radios grandes: ~0.05 .. 0.15 aprox
+			float s01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			C.speed = 0.05f + s01 * 0.10f;     // [0.05, 0.15]
+
+
+			// Sentido horario / antihorario
+			C.directionSign = (i % 2 == 0) ? 1.0f : -1.0f;
+
+			// Fase inicial para separarlos
+			const float PI = 3.14159265359f;
+			C.phase = (2.0f * PI / NUM_CALAMARES) * float(i);
+
+			// Tiempo inicial
+			C.time = 0.0f;
+		}
+	}
+
 
 	glGenTextures(1, &textTexture);
 	glBindTexture(GL_TEXTURE_2D, textTexture);
@@ -1360,13 +1424,15 @@ bool Update() {
 			cangrejo->Draw(*dynamicShader);
 			//glUseProgram(0);
 
-			calamar->UpdateAnimation(deltaTime);
+			
+			//calamar->UpdateAnimation(deltaTime);
 
 			/*dynamicShader->setFloat("time", proceduralTime);
 			dynamicShader->setFloat("radius", 35.0f);
 			dynamicShader->setFloat("height", 7.0f);*/
 
 			//dynamicShader->use();
+			/*
 			dynamicShader->setMat4("projection", projection);
 			dynamicShader->setMat4("view", view);
 
@@ -1378,8 +1444,9 @@ bool Update() {
 			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));	// it's a bit too big for our scene, so scale it down
 			dynamicShader->setMat4("model", model);
 			dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
-			calamar->Draw(*dynamicShader);
-			//glUseProgram(0);
+			calamar->Draw(*dynamicShader); 
+			//glUseProgram(0); 
+			
 
 			mantaraya->UpdateAnimation(deltaTime);
 
@@ -1537,6 +1604,58 @@ bool Update() {
 					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, pulpo->gBones);
 					pulpo->Draw(*dynamicShader);
 				}
+			}
+
+			// ================== Inicializar calamares en anillos sinusoidales ==================
+			{
+				calamar->UpdateAnimation(deltaTime);
+				// ================== CALAMARES EN ANILLOS SINUSOIDALES ==================
+				dynamicShader->use();
+				dynamicShader->setMat4("projection", projection);
+				dynamicShader->setMat4("view", view);
+
+				// (Aquí asumo que ANTES ya hiciste:
+				//  - set de luces en dynamicShader
+				//  - MaterialAmbient/Diffuse/Specular
+				//  - cameraPos, waterLevel, fog, etc.)
+
+				for (int i = 0; i < NUM_CALAMARES; ++i) {
+					CalamarPath& C = gCalamares[i];
+
+					// Avanzar el tiempo (son más rápidos)
+					C.time += deltaTime * C.speed;
+
+					// t con dirección y fase
+					float t = C.directionSign * C.time + C.phase;
+
+					// Posición actual y siguiente
+					glm::vec3 posNow = anilloSinusoidal(C.center, t,
+						C.radius, C.amplitude, C.n);
+					glm::vec3 posNext = anilloSinusoidal(C.center,
+						t + 0.05f * C.directionSign,
+						C.radius, C.amplitude, C.n);
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, posNow);
+
+					glm::mat4 R = orientAlongPath(posNow, posNext);
+					model *= R;
+
+					// 1) Acostar al calamar (rotar sobre X)
+					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					//    Si se queda de panza arriba, prueba 90.0f en vez de -90.0f
+
+					// 2) (Opcional) Si la cabeza mira al revés, mantén o ajusta este giro en Y:
+					//model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+					model = glm::scale(model, glm::vec3(0.003f));
+
+					dynamicShader->setMat4("model", model);
+					dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, calamar->gBones);
+					calamar->Draw(*dynamicShader);
+				}
+
+
 			}
 
 			// ===== DELFINES EN ANILLO SINUSOIDAL ===================================================
