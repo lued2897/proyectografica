@@ -624,7 +624,7 @@ bool Start() {
 
 				TrashInstance t;
 				t.model = model;
-				t.position = glm::vec3(x, 0.04f, z); // y = 0.04 fijo
+				t.position = glm::vec3(x, 0.06f, z); // y = 0.04 fijo
 				t.rotateX = rotX;
 				t.scale = scale;
 				t.active = true;
@@ -638,11 +638,11 @@ bool Start() {
 		addTrashInstances(tenedor, -90.0f, glm::vec3(0.055f, 0.055f, 0.055f));
 		addTrashInstances(cuchara, -90.0f, glm::vec3(0.105f, 0.105f, 0.105f));
 		addTrashInstances(lata, 0.0f, glm::vec3(0.105f, 0.105f, 0.105f));
-		addTrashInstances(popote, 0.0f, glm::vec3(0.1f, 0.1f, 1.0f));
+		addTrashInstances(popote, 0.0f, glm::vec3(0.1f, 0.1f, 0.1f));
 		addTrashInstances(plato, -90.0f, glm::vec3(0.30f, 0.30f, 0.30f));
 		addTrashInstances(botella_vidrio, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f));
 		addTrashInstances(botella_plastico, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f));
-		addTrashInstances(cigarro, 0.0f, glm::vec3(0.1f, 0.1f, 1.0f));
+		addTrashInstances(cigarro, 0.0f, glm::vec3(0.1f, 0.1f, 0.1f));
 	}
 
 	
