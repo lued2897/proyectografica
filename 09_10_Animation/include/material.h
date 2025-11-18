@@ -22,7 +22,7 @@ public:
 		diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 		specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f); 
 		transparency = 1.0f;
-		alphaIndex = 128;
+		alphaIndex = 256;
 	}
 
 	Material(glm::vec4 amb_color, glm::vec4 dif_color, glm::vec4 spec_color, float transp,int alpha) {

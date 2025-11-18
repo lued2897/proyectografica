@@ -205,6 +205,9 @@ CubeMap* beachCubeMap;
 // Light gLight;
 std::vector<Light> gLights;
 
+//Luces superficie
+std::vector<Light> Lights_playa;
+
 // Materiales
 Material material01;
 
@@ -423,6 +426,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	};
 	const int NUM_CANGREJOS = 8;
 	std::vector<CangrejoPath> gCangrejos;
+	std::vector<CangrejoPath> gCangrejos2;
 
 //Definición arreglo de tortugas
 	struct TortugaPath {
@@ -507,7 +511,7 @@ bool Start() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Creación de la ventana con GLFW
-	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Animation", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Vida Marina", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -559,7 +563,7 @@ bool Start() {
 	bounding_boxes_agua = new Model("models/bounding_boxes_terrain.fbx");
 	bounding_boxes_agua->calculateAABB();
 	// ---------------------------------- Terreno playa ----------------------------------
-	std::cout << "Carga terreno playa \n" << std::endl;
+	std::cout << "Cargando terreno... " << std::endl;
 	beach_terrain = new Model("models/beach_terrain.fbx");
 	bounding_boxes_playa = new Model("models/bounding_boxes_playa.fbx");
 	bounding_boxes_playa->calculateAABB();
@@ -569,9 +573,9 @@ bool Start() {
 	//boat = new Model("models/boat.fbx");
 	moon = new Model("models/IllumModels/moon.fbx");
 	gridMesh = new Model("models/plano_mar.fbx");
-	std::cout << "Cofre lalo" << std::endl;
+	//std::cout << "Cofre lalo" << std::endl;
 	//chest = new Model("models/untitled.fbx");
-	std::cout << "Fin Cofre lalo" << std::endl;
+	//std::cout << "Fin Cofre lalo" << std::endl;
 
 	// ---------------------------------- Pariculas ----------------------------------
 	particlesShader = new Shader("shaders/13_particles.vs", "shaders/13_particles.fs");
@@ -581,37 +585,82 @@ bool Start() {
 
 	
 	{//basura
-		std::cout << "Carga basura" << std::endl;
+		std::cout << "Cargando modelos... " << std::endl;
+		//std::cout << "Carga basura" << std::endl;
 		bolsa = new Model("models/bolsaBasuraMejorada.fbx");
-		std::cout << "1" << std::endl;
+			bolsa->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			bolsa->material.diffuse = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+			bolsa->material.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+			bolsa->material.alphaIndex = 40; //plastico negro
+		//std::cout << "1" << std::endl;
 		tenedor = new Model("models/FORK.fbx");
-		std::cout << "2" << std::endl;
+			tenedor->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			tenedor->material.diffuse = glm::vec4(0.55f, 0.55f, 0.55f, 1.0f);
+			tenedor->material.specular = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
+			tenedor->material.alphaIndex = 40; //plastico blanco
+		//std::cout << "2" << std::endl;
 		cuchara = new Model("models/CucharaYaPorfavor.fbx");
-		std::cout << "3" << std::endl;
+			cuchara->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			cuchara->material.diffuse = glm::vec4(0.55f, 0.55f, 0.55f, 1.0f);
+			cuchara->material.specular = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
+			cuchara->material.alphaIndex = 40; //plastico blanco
+		//std::cout << "3" << std::endl;
 		tapa = new Model("models/Tapa_dorada.fbx");
-		std::cout << "4" << std::endl;
+			tapa->material.ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
+			tapa->material.diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
+			tapa->material.specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
+			tapa->material.alphaIndex = 25; //oro
+		//std::cout << "4" << std::endl;
 		lata = new Model("models/lata.fbx");
-		std::cout << "5" << std::endl;
+			lata->material.ambient = glm::vec4(0.1745f, 	0.01175f, 	0.01175f, 1.0f);
+			lata->material.specular = glm::vec4(0.527811f, 	0.426959f, 	0.426959f, 1.0f);
+			lata->material.alphaIndex = 17; //metal rojo
+		//std::cout << "5" << std::endl;
 		popote = new Model("models/popote.fbx");
-		std::cout << "6" << std::endl;
+			popote->material.ambient = glm::vec4(0.0f, 	0.0f, 	0.0f, 1.0f);
+			popote->material.diffuse = glm::vec4(0.5f, 	0.0f, 	0.0f, 1.0f);
+			popote->material.specular = glm::vec4(0.7f, 	0.6f, 	0.6f, 1.0f);
+			popote->material.alphaIndex = 40; //plastico rojo
+		//std::cout << "6" << std::endl;
 		cigarro = new Model("models/Cigarro.fbx");
-		std::cout << "7" << std::endl;
+			cigarro->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			cigarro->material.diffuse = glm::vec4(0.25f, 0.25f, 0.25f, 1.0f);
+			cigarro->material.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+			cigarro->material.alphaIndex = 120; //papel blanco
+		//std::cout << "7" << std::endl;
 		plato = new Model("models/PLATE.fbx");
-		std::cout << "8" << std::endl;
+			plato->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			plato->material.diffuse = glm::vec4(0.55f, 0.55f, 0.55f, 1.0f);
+			plato->material.specular = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
+			plato->material.alphaIndex = 40; //plastico blanco
+		//std::cout << "8" << std::endl;
 		botella_vidrio = new Model("models/botelladevino.fbx");
-		std::cout << "9" << std::endl;
+			botella_vidrio->material.ambient = glm::vec4(0.074f, 0.231f, 0.070f, 1.0f);
+			botella_vidrio->material.specular = glm::vec4(0.843f, 0.941f, 0.839f, 1.0f);
+			botella_vidrio->material.alphaIndex = 20; //cristal verde
+		//std::cout << "9" << std::endl;
 		botella_plastico = new Model("models/botellaplastico.fbx");
-		std::cout << "10" << std::endl;
+			botella_plastico->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			botella_plastico->material.diffuse = glm::vec4(0.55f, 0.55f, 0.55f, 1.0f);
+			botella_plastico->material.specular = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
+			botella_plastico->material.alphaIndex = 40; //plastico blanco
+		//std::cout << "10" << std::endl;
 		cofre_inf = new Model("models/cofre_inf.fbx");
-		std::cout << "11" << std::endl;
+			cofre_inf->material.ambient = glm::vec4(0.254f, 0.149f, 0.105f, 1.0f);
+			cofre_inf->material.specular = glm::vec4(0.701f, 0.545f, 0.478f, 1.0f);
+			cofre_inf->material.alphaIndex = 120; //madera
+		//std::cout << "11" << std::endl;
 		cofre_sup = new Model("models/cofre_sup.fbx");
-		std::cout << "12" << std::endl;
+			cofre_sup->material.ambient = glm::vec4(0.254f, 0.149f, 0.105f, 1.0f);
+			cofre_sup->material.specular = glm::vec4(0.701f, 0.545f, 0.478f, 1.0f);
+			cofre_sup->material.alphaIndex = 120; //madera
+		//std::cout << "12" << std::endl;
 		monkey = new Model("models/monkey.fbx");
 			monkey->material.ambient = glm::vec4(0.24725f, 	0.1995f, 	0.0745f,1.0f);
 			monkey->material.diffuse = glm::vec4(0.75164f, 	0.60648f, 	0.22648f, 1.0f);
 			monkey->material.specular = glm::vec4(0.628281f, 	0.555802f, 	0.366065f, 1.0f);
 			monkey->material.alphaIndex = 25; //oro
-		std::cout << "Termina basura" << std::endl;
+		//std::cout << "Termina basura" << std::endl;
 		//cofre = new Model("models/cofreahorasi.fbx");
 	}
 	// ================== Crear basura aleatoria Submarina ==================
@@ -685,38 +734,39 @@ bool Start() {
 
 	
 	{//Animales
-		std::cout << "Carga animales" << std::endl;
+		std::cout << "Cargando animaciones... " << std::endl;
+		//std::cout << "Carga animales" << std::endl;
 		pez = new AnimatedModel("models/pezBien.fbx");
-		std::cout << "1" << std::endl;
+		//std::cout << "1" << std::endl;
 		tortuga = new Model("models/tortuga.fbx");
-		std::cout << "2" << std::endl;
+		//std::cout << "2" << std::endl;
 		medusa = new AnimatedModel("models/jellyfish.fbx");
-		std::cout << "3" << std::endl;
+		//std::cout << "3" << std::endl;
 		pulpo = new AnimatedModel("models/pulpoAnimado.fbx");
-		std::cout << "4" << std::endl;
+		//std::cout << "4" << std::endl;
 		cangrejo = new AnimatedModel("models/Crab.fbx");
-		std::cout << "5" << std::endl;
+		//std::cout << "5" << std::endl;
 		calamar = new AnimatedModel("models/calamarAnimado.fbx");
-		std::cout << "6" << std::endl;
+		//std::cout << "6" << std::endl;
 		estrella = new Model("models/star.fbx");
-		std::cout << "7" << std::endl;
+		//std::cout << "7" << std::endl;
 		mantaraya = new AnimatedModel("models/ray_merged.fbx");
-		std::cout << "8" << std::endl;
+		//std::cout << "8" << std::endl;
 		caballito = new AnimatedModel("models/caballito de mar.fbx");
-		std::cout << "9" << std::endl;
+		//std::cout << "9" << std::endl;
 		delfin = new AnimatedModel("models/DolphinFinal_Animate2.fbx");
-		std::cout << "10" << std::endl;
+		//std::cout << "10" << std::endl;
 		erizo = new Model("models/Erizo_mar.fbx");
-		std::cout << "11" << std::endl;
+		//std::cout << "11" << std::endl;
 		diver = new AnimatedModel("models/diver_swim.fbx");
-		std::cout << "12" << std::endl;
+		//std::cout << "12" << std::endl;
 		diver_walk = new AnimatedModel("models/diver_walk.fbx");
-		std::cout << "13" << std::endl;
+		//std::cout << "13" << std::endl;
 		diver_idle = new AnimatedModel("models/diver_idle.fbx");
-		std::cout << "14" << std::endl;
+		//std::cout << "14" << std::endl;
 
 		delfin2 = new AnimatedModel("models/DolphinFinal_Animate3.fbx");
-		std::cout << "Termina animales" << std::endl;
+		//std::cout << "Termina animales" << std::endl;
 
 	}
 
@@ -728,7 +778,7 @@ bool Start() {
 	}
 
 	character01 = new AnimatedModel("models/pezBien.fbx");
-	std::cout << "Termina carga personaje" << std::endl;
+	//std::cout << "Termina carga personaje" << std::endl;
 
 	// Cubemap
 	vector<std::string> faces
@@ -763,14 +813,52 @@ bool Start() {
 	// Lights configuration
 	
 	Light light01;
-	light01.Position = glm::vec3(5.0f, 10.0f, 5.0f);
-	light01.Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+	light01.Position = glm::vec3(10.0f, 50.0f, 10.0f);
+	light01.Color = glm::vec4(0.5f, 0.7f, 0.9f, 1.0f);
+	light01.Direction = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.2f));  // angled sunlight
+	light01.Power = glm::vec4(180.0f, 180.0f, 180.0f, 1.0f); // strong!
+	light01.distance = 12.0f;
 	gLights.push_back(light01);
 
 	Light light02;
-	light02.Position = glm::vec3(-5.0f, 10.0f, 5.0f);
-	light02.Color = glm::vec4(0.2f, 0.1f, 0.5f, 1.0f);
+	light02.Position = glm::vec3(0.0f, 50.0f, 1.0f);
+	light02.Color = glm::vec4(0.721f, 0.498f, 0.882f, 1.0f);
+	light02.Direction = glm::normalize(glm::vec3(0.0f, -1.0f, 0.0f));  // angled sunlight
+	light02.Power = glm::vec4(12.0f, 12.0f, 12.0f, 1.0f); 
+	light02.distance = 4.0f;
 	gLights.push_back(light02);
+
+	/*Light light02;
+	light02.Position = glm::vec3(-20.0f, 10.0f, -20.0f);
+	light02.Color = glm::vec4(0.2f, 0.1f, 0.5f, 1.0f);
+	gLights.push_back(light02);*/
+
+
+	//Luces superficie
+	Light sun;
+	sun.Position = glm::vec3(-70.0f, 60.0f, 90.0f);   // arbitrary, since it's directional
+	sun.Direction = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.2f));  // angled sunlight
+	sun.Color = glm::vec4(1.0f, 0.95f, 0.85f, 1.0f);   // warm sunlight
+	sun.Power = glm::vec4(180.0f, 180.0f, 180.0f, 1.0f); // strong!
+	sun.alphaIndex = 32;    // sharp specular on wet sand
+	sun.distance = 10.0f;       // large so falloff is low
+	Lights_playa.push_back(sun);
+
+	Light skylight;
+	skylight.Position = glm::vec3(0.0f, 60.0f, 0.0f);
+	skylight.Direction = glm::vec3(0, -1, 0);
+	skylight.Color = glm::vec4(0.4f, 0.55f, 0.75f, 1.0f);  // bluish
+	skylight.Power = glm::vec4(10.0f, 10.0f, 10.0f, 1.0f);
+	skylight.alphaIndex = 4;     // skylight is diffuse
+	skylight.distance = 4.0f;
+	Lights_playa.push_back(skylight);
+
+	/*Light light04;
+	light02.Position = glm::vec3(5.0f, 10.0f, 5.0f);
+	light02.Color = glm::vec4(0.3f, 0.4f, 0.05f, 1.0f);
+	Lights_playa.push_back(light04);*/
+
+
 
 	/*/Light light03;
 	light03.Position = glm::vec3(5.0f, 2.0f, -5.0f);
@@ -1152,6 +1240,81 @@ bool Start() {
 			// Tiempo inicial
 			C.time = 0.0f;
 		}
+		//CANGREJOS SUPERFICIE
+		{
+			gCangrejos2.clear();
+			gCangrejos2.resize(NUM_CANGREJOS); // asegúrate que NUM_CANGREJOS == 7
+
+			for (int i = 0; i < NUM_CANGREJOS; ++i) {
+				CangrejoPath& C = gCangrejos2[i];
+
+				// Valores manuales por cangrejo
+				switch (i) {
+				case 0:
+					C.center = glm::vec3(-10.0f, 0.25f, -20.0f);
+					C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));   // mueve en X
+					C.length = 6.0f;
+					C.speed = 0.05f;   // lento
+					C.phase = 0.0f;
+					break;
+
+				case 1:
+					C.center = glm::vec3(10.0f, 0.25f, -25.0f);
+					C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));   // mueve en Z
+					C.length = 5.0f;
+					C.speed = 0.06f;
+					C.phase = 1.0f;    // desfase para no ir igual que el 0
+					break;
+
+				case 2:
+					C.center = glm::vec3(35.0f, 0.25f, -15.0f);
+					C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f));   // diagonal
+					C.length = 4.0f;
+					C.speed = 0.07f;
+					C.phase = 2.0f;
+					break;
+
+				case 3:
+					C.center = glm::vec3(40.0f, 0.25f, 0.0f);
+					C.dir = glm::normalize(glm::vec3(-1.0f, 0.0f, 1.0f));  // diagonal
+					C.length = 7.0f;
+					C.speed = 0.08f;
+					C.phase = 0.5f;
+					break;
+
+				case 4:
+					C.center = glm::vec3(-5.0f, 0.25f, 15.0f);
+					C.dir = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));  // diagonal
+					C.length = 5.5f;
+					C.speed = 0.06f;
+					C.phase = 1.5f;
+					break;
+
+				case 5:
+					C.center = glm::vec3(25.0f, 0.25f, 25.0f);
+					C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f));  // en Z
+					C.length = 6.5f;
+					C.speed = 0.09f;
+					C.phase = 2.5f;
+					break;
+
+				case 6:
+					C.center = glm::vec3(60.0f, 0.25f, 10.0f);
+					C.dir = glm::normalize(glm::vec3(-1.0f, 0.0f, 0.3f));  // leve diagonal
+					C.length = 7.0f;
+					C.speed = 0.1f;
+					C.phase = 3.0f;
+					break;
+				case 7:
+					C.center = glm::vec3(20.0f, 0.25f, 0.0f);
+					C.dir = glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f));  // en Z
+					C.length = 6.5f;
+					C.speed = 0.09f;
+					C.phase = 2.5f;
+					break;
+				}
+			}
+		}
 	}
 	// ================== Inicializar tortugas (trayectoria tipo trébol) ==================
 	{
@@ -1353,13 +1516,21 @@ void prepareTrash(Model* object, glm::vec3 translate, float rotatex, glm::vec3 s
 	mLightsShader->setMat4("model", model);
 
 	//Luces
-	for (size_t i = 0; i < gLights.size(); ++i) {
-		SetLightUniformVec3(mLightsShader, "Position", i, gLights[i].Position);
-		SetLightUniformVec3(mLightsShader, "Direction", i, gLights[i].Direction);
-		SetLightUniformVec4(mLightsShader, "Color", i, gLights[i].Color);
-		SetLightUniformVec4(mLightsShader, "Power", i, gLights[i].Power);
+	
+	std::vector<Light> Lights;
+	if (submarino) {
+		Lights = gLights;
+	}
+	else {
+		Lights = Lights_playa;
+	}
+	for (size_t i = 0; i < Lights.size(); ++i) {
+		SetLightUniformVec3(mLightsShader, "Position", i, Lights[i].Position);
+		SetLightUniformVec3(mLightsShader, "Direction", i, Lights[i].Direction);
+		SetLightUniformVec4(mLightsShader, "Color", i, Lights[i].Color);
+		SetLightUniformVec4(mLightsShader, "Power", i, Lights[i].Power);
 		SetLightUniformInt(mLightsShader, "alphaIndex", i, object->material.alphaIndex);
-		SetLightUniformFloat(mLightsShader, "distance", i, gLights[i].distance);
+		SetLightUniformFloat(mLightsShader, "distance", i, Lights[i].distance);
 	}
 
 	// Aplicamos propiedades materiales
@@ -2417,14 +2588,14 @@ bool Update() {
 		mLightsShader->setMat4("model", model);
 
 		// Configuramos propiedades de fuentes de luz
-		mLightsShader->setInt("numLights", (int)gLights.size());
-		for (size_t i = 0; i < gLights.size(); ++i) {
-			SetLightUniformVec3(mLightsShader, "Position", i, gLights[i].Position);
-			SetLightUniformVec3(mLightsShader, "Direction", i, gLights[i].Direction);
-			SetLightUniformVec4(mLightsShader, "Color", i, gLights[i].Color);
-			SetLightUniformVec4(mLightsShader, "Power", i, gLights[i].Power);
-			SetLightUniformInt(mLightsShader, "alphaIndex", i, gLights[i].alphaIndex);
-			SetLightUniformFloat(mLightsShader, "distance", i, gLights[i].distance);
+		mLightsShader->setInt("numLights", (int)Lights_playa.size());
+		for (size_t i = 0; i < Lights_playa.size(); ++i) {
+			SetLightUniformVec3(mLightsShader, "Position", i, Lights_playa[i].Position);
+			SetLightUniformVec3(mLightsShader, "Direction", i, Lights_playa[i].Direction);
+			SetLightUniformVec4(mLightsShader, "Color", i, Lights_playa[i].Color);
+			SetLightUniformVec4(mLightsShader, "Power", i, Lights_playa[i].Power);
+			SetLightUniformInt(mLightsShader, "alphaIndex", i, 20);
+			SetLightUniformFloat(mLightsShader, "distance", i, Lights_playa[i].distance);
 		}
 
 		mLightsShader->setVec3("eye", camera.Position);
@@ -2521,9 +2692,69 @@ bool Update() {
 		}
 		glUseProgram(0);
 
+		// ================== CANGREJOS CAMINANDO DE LADO A LADO ==================
+		{
+			cangrejo->UpdateAnimation(deltaTime);
+			dynamicShader->use();
+			dynamicShader->setMat4("projection", projection);
+			dynamicShader->setMat4("view", view);
+			dynamicShader->setFloat("waterLevel", 0.0f); // adjust if needed
+			dynamicShader->setFloat("fogDensity", 0.00f);
+			dynamicShader->setFloat("depthAttenuation", 0.0f);
+			dynamicShader->setVec3("fogColor", glm::vec3(0.0f, 0.0f, 0.0f));
+			dynamicShader->setFloat("caustic_intensity", 0.0f);
+			for (size_t i = 0; i < Lights_playa.size(); ++i) {
+				SetLightUniformVec3(dynamicShader, "Position", i, Lights_playa[i].Position);
+				SetLightUniformVec3(dynamicShader, "Direction", i, Lights_playa[i].Direction);
+				SetLightUniformVec4(dynamicShader, "Color", i, Lights_playa[i].Color);
+				SetLightUniformVec4(dynamicShader, "Power", i, Lights_playa[i].Power);
+				SetLightUniformInt(dynamicShader, "alphaIndex", i, Lights_playa[i].alphaIndex);
+				SetLightUniformFloat(dynamicShader, "distance", i, Lights_playa[i].distance);
+			}
+
+			for (int i = 0; i < NUM_CANGREJOS; ++i) {
+				CangrejoPath& C = gCangrejos2[i];
+
+				// Avanzar tiempo
+				C.time += deltaTime * C.speed;
+				float t = C.time + C.phase;
+
+				// Movimiento de ida y vuelta
+				float factor = sinf(t);                  // [-1,1]
+				glm::vec3 offset = C.dir * (factor * C.length);
+
+				glm::vec3 posNow = C.center + offset;
+
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, posNow);
+				model = glm::rotate(model, glm::radians(rotateCharacter), glm::vec3(0.0, 1.0f, 0.0f));
+
+				// Escala
+				model = glm::scale(model, glm::vec3(0.008f));
+
+				dynamicShader->setMat4("model", model);
+				dynamicShader->setMat4("gBones", MAX_RIGGING_BONES, cangrejo->gBones);
+				cangrejo->Draw(*dynamicShader);
+			}
+		}
+
 		
 
+		// Mostrar imagen de texto como overlay en pantalla completa
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		fullscreenShader->use();
+		glBindVertexArray(quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textTexture);
+		fullscreenShader->setInt("screenTexture", 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
 
 		PlaySceneMusic("sounds/OlasdeSal.mp3"); // música playa
 

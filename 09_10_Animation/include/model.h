@@ -114,13 +114,13 @@ public:
 			i = i + 1;
 		}
 		for (const auto& aabb : aabbs) {
-			cout << "bounding box=:" << aabb.maxExtent.x << ","
+			/*cout << "bounding box=:" << aabb.maxExtent.x << ","
 				<< aabb.maxExtent.y << ","
 				<< aabb.maxExtent.z << "     " 
 				<< aabb.minExtent.x << ","
 				<< aabb.minExtent.y << ","
 				<< aabb.minExtent.z
-				<< endl;
+				<< endl;*/
 		}
 		//return aabbs;
 	}
