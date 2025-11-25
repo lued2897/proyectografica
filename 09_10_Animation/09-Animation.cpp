@@ -170,6 +170,7 @@ Model *cofre;
 Model* cofre_sup;
 Model* cofre_inf;
 Model* monkey;
+Model* flecha;
 
 // Modelos animados
 AnimatedModel   *character01;
@@ -481,7 +482,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_TRASH_PER_TYPE = 15;   // 10 por tipo
 	std::vector<TrashInstance> gTrash;   // todos los objetos de basura
 	// == basura para la PLAYA ===
-	const int NUM_TRASH_BEACH_PER_TYPE = 15;
+	const int NUM_TRASH_BEACH_PER_TYPE = 10;
 	std::vector<TrashInstance> gTrashBeach;
 
 
@@ -661,42 +662,82 @@ bool Start() {
 			monkey->material.specular = glm::vec4(0.628281f, 	0.555802f, 	0.366065f, 1.0f);
 			monkey->material.alphaIndex = 25; //oro
 		//std::cout << "Termina basura" << std::endl;
+		flecha = new Model("models/Flecha.fbx");
+			popote->material.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			popote->material.diffuse = glm::vec4(0.5f, 0.0f, 0.0f, 1.0f);
+			popote->material.specular = glm::vec4(0.7f, 0.6f, 0.6f, 1.0f);
+			popote->material.alphaIndex = 40; //plastico rojo
 		//cofre = new Model("models/cofreahorasi.fbx");
 	}
 	// ================== Crear basura aleatoria Submarina ==================
 	{
-		// Usamos la misma semilla que ya estás usando para otras cosas
-		auto addTrashInstances = [&](Model* model, float rotX, glm::vec3 scale) {
-			for (int i = 0; i < NUM_TRASH_PER_TYPE; ++i) {
-				float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-				float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+		// ---- 1) Helper: comprobar si una esfera en 'pos' choca con los AABB del terreno submarino
+		auto collidesWithWaterObstacles = [&](const glm::vec3& pos, float radius) -> bool
+			{
+				// Recorremos todos los AABB calculados para bounding_boxes_agua
+				for (const auto& box : bounding_boxes_agua->aabbs) {
+					// Usa la MISMA función que usa  la cámara:
+					if (sphereAABB(pos, radius, box)){
+						return true;
+					}
+				}
+				return false;
+			};
 
-				float x = -50.0f + rx * 100.0f; // [-50, 50]
-				float z = -50.0f + rz * 100.0f; // [-50, 50]
+		// ---- 2) Función para añadir instancias de basura evitando obstáculos
+		auto addTrashInstances = [&](Model* model, float rotX, glm::vec3 scale, float collisionRadius) {
+			for (int i = 0; i < NUM_TRASH_PER_TYPE; ++i) {
+
+				glm::vec3 pos;
+				bool found = false;
+
+				// Intentamos varias veces hasta encontrar un lugar libre
+				const int MAX_TRIES = 50;
+				for (int attempt = 0; attempt < MAX_TRIES; ++attempt) {
+					float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+					float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+					float x = -50.0f + rx * 100.0f; // [-50, 50]
+					float z = -50.0f + rz * 100.0f; // [-50, 50]
+
+					glm::vec3 candidatePos = glm::vec3(x, 0.3f, z);
+
+					// Si NO choca con ningún obstáculo submarino, aceptamos esta posición
+					if (!collidesWithWaterObstacles(candidatePos, collisionRadius)) {
+						pos = candidatePos;
+						found = true;
+						break;
+					}
+				}
+
+				// Si no encontramos buen lugar en MAX_TRIES, mejor no instanciamos esa pieza
+				if (!found) continue;
 
 				TrashInstance t;
 				t.model = model;
-				t.position = glm::vec3(x, 0.1f, z); // y fijo
+				t.position = pos;         // posición ya libre de colisión
 				t.rotateX = rotX;
 				t.scale = scale;
 				t.active = true;
 
 				gTrash.push_back(t);
 			}
-		};
+			};
 
-		// Escalas/rotaciones 
-		addTrashInstances(bolsa, -90.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-		addTrashInstances(tenedor, -90.0f, glm::vec3(0.055f, 0.055f, 0.055f));
-		addTrashInstances(cuchara, -90.0f, glm::vec3(0.105f, 0.105f, 0.105f));
-		addTrashInstances(lata, 0.0f, glm::vec3(0.105f, 0.105f, 0.105f));
-		addTrashInstances(popote, 0.0f, glm::vec3(0.025f, 0.025f, 0.02f));
-		addTrashInstances(plato, -90.0f, glm::vec3(0.30f, 0.30f, 0.30f));
-		addTrashInstances(botella_vidrio, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f));
-		addTrashInstances(botella_plastico, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f));
-		addTrashInstances(cigarro, 0.0f, glm::vec3(0.1f, 0.1f, 0.1f));
-		addTrashInstances(tapa, 0.0f, glm::vec3(0.001f, 0.001f, 0.001f));
+		// ---- 3) Crear cada tipo de basura con un radio aproximado (para la prueba de colisión)
+		//        Ajusta los radios según el tamaño real de cada modelo.
+		addTrashInstances(bolsa, -90.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+		addTrashInstances(tenedor, -90.0f, glm::vec3(0.055f, 0.055f, 0.055f), 0.4f);
+		addTrashInstances(cuchara, -90.0f, glm::vec3(0.105f, 0.105f, 0.105f), 0.4f);
+		addTrashInstances(lata, 0.0f, glm::vec3(0.105f, 0.105f, 0.105f), 0.5f);
+		addTrashInstances(popote, 0.0f, glm::vec3(0.025f, 0.025f, 0.02f), 0.3f);
+		addTrashInstances(plato, -90.0f, glm::vec3(0.30f, 0.30f, 0.30f), 0.7f);
+		addTrashInstances(botella_vidrio, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f), 0.6f);
+		addTrashInstances(botella_plastico, -90.0f, glm::vec3(0.10f, 0.10f, 0.10f), 0.6f);
+		addTrashInstances(cigarro, 0.0f, glm::vec3(0.1f, 0.1f, 0.1f), 0.3f);
+		addTrashInstances(tapa, 0.0f, glm::vec3(0.001f, 0.001f, 0.001f), 0.2f);
 	}
+
 	// ================== Crear basura aleatoria PLAYA ==================
 	{
 		auto addTrashInstancesBeach = [&](Model* model, float rotX, glm::vec3 scale) {
@@ -1743,6 +1784,32 @@ bool Update() {
 					// Dibujar el modelo si sigue activo
 					t.model->Draw(*mLightsShader);
 				}
+				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
+				for (const auto& t : gTrash) {
+					if (!t.active) continue; // solo basura que aún no se recoge
+
+					glm::vec3 arrowPos = t.position + glm::vec3(0.0f, 3.0f, 0.0f); // y = +3 por encima
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, arrowPos);
+
+					// Orientación de la flecha: ejemplo, apuntando hacia abajo
+					// (ajusta el eje/ángulo según cómo venga el modelo Flecha.fbx)
+					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+					// Escala de la flecha (ajusta a ojo)
+					model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+
+					mLightsShader->setMat4("model", model);
+
+					// Usamos el mismo material que estrella/erizo/basura
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					flecha->Draw(*mLightsShader);
+				}
 
 			}
 
@@ -2647,6 +2714,34 @@ bool Update() {
 				}
 				// Dibujar el modelo si sigue activo
 				t2.model->Draw(*mLightsShader);
+
+				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
+				for (const auto& t : gTrash) {
+					if (!t2.active) continue; // solo basura que aún no se recoge
+
+					glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 2.0f, 0.0f); // y = +3 por encima
+
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, arrowPos);
+
+					// Orientación de la flecha: ejemplo, apuntando hacia abajo
+					// (ajusta el eje/ángulo según cómo venga el modelo Flecha.fbx)
+					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+					// Escala de la flecha (ajusta a ojo)
+					model = glm::scale(model, glm::vec3(0.35f, 0.35f, 0.35f));
+
+					mLightsShader->setMat4("model", model);
+
+					// Usamos el mismo material que estrella/erizo/basura
+					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+					mLightsShader->setFloat("transparency", material01.transparency);
+
+					flecha->Draw(*mLightsShader);
+				}
+
 			}
 		
 
