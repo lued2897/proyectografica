@@ -37,6 +37,7 @@ using namespace irrklang;
 // Functions
 bool Start();
 bool Update();
+bool Intro();
 
 // Definición de callbacks
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -227,6 +228,12 @@ int    activeCamera = 0; // activamos la primera cámara
 //para imprimir imagen en pantalla completa
 unsigned int quadVAO, quadVBO;
 unsigned int textTexture;
+unsigned int texPressR;
+unsigned int texCamera;
+unsigned int texWASD;
+unsigned int texTrash;
+
+
 float fullscreenQuad[] = {
 	// pos      // tex coords (invertido en Y)
 	-1.0f,  1.0f,  0.0f, 0.0f,   // top-left → texCoord (0,0)
@@ -263,6 +270,31 @@ bool nearTrash(glm::vec3 cameraPos, glm::vec3 transform) {
 	}
 }
 
+void loadTexture(const char* path, unsigned int& texID) {
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_2D, texID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int w, h, n;
+	unsigned char* data = stbi_load(path, &w, &h, &n, 0);
+
+	if (data) {
+		GLenum format = (n == 4) ? GL_RGBA : GL_RGB;
+		glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		std::cout << "Loaded " << path << " " << w << "x" << h << "\n";
+	}
+	else {
+		std::cout << "Failed loading " << path << "\n";
+	}
+
+	stbi_image_free(data);
+}
+
 
 
 // Entrada a función principal
@@ -271,6 +303,11 @@ int main()
 	if (!Start())
 		return -1;
 
+	lastFrame = (float)glfwGetTime();
+	while (!glfwWindowShouldClose(window)) {
+		if (!Intro())
+			break;
+	}
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
@@ -1421,29 +1458,33 @@ bool Start() {
 
 
 
-	glGenTextures(1, &textTexture);
-	glBindTexture(GL_TEXTURE_2D, textTexture);
+	//glGenTextures(1, &textTexture);
+	//glBindTexture(GL_TEXTURE_2D, textTexture);
 
-	// Configura parámetros de textura
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//// Configura parámetros de textura
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	// Carga la imagen
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load("textures/pressR.png", &width, &height, &nrChannels, 0);
-	if (data) {
-		GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		std::cout << "Se cargó pressR.png con tamaño: " << width << "x" << height << std::endl;
-	}
-	else {
-		std::cout << "Error al cargar pressR.png" << std::endl;
-	}
+	//// Carga la imagen
+	//int width, height, nrChannels;
+	//unsigned char* data = stbi_load("textures/pressR.png", &width, &height, &nrChannels, 0);
+	//if (data) {
+	//	GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+	//	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	//	glGenerateMipmap(GL_TEXTURE_2D);
+	//	std::cout << "Se cargó pressR.png con tamaño: " << width << "x" << height << std::endl;
+	//}
+	//else {
+	//	std::cout << "Error al cargar pressR.png" << std::endl;
+	//}
 
-	stbi_image_free(data);
+	//stbi_image_free(data);
+	loadTexture("textures/camera.png", texCamera);
+	loadTexture("textures/wasd.png", texWASD);
+	loadTexture("textures/basura.png", texTrash);
+	loadTexture("textures/pressR.png", texPressR);
 
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1, &quadVBO);
@@ -1539,6 +1580,62 @@ void prepareTrash(Model* object, glm::vec3 translate, float rotatex, glm::vec3 s
 	mLightsShader->setVec4("MaterialSpecularColor", object->material.specular);
 	mLightsShader->setFloat("transparency", object->material.transparency);
 
+}
+
+bool Intro() {
+	float currentFrame = (float)glfwGetTime();
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+
+	elapsedTime += deltaTime;
+
+	processInput(window);
+
+	// Renderizado R - G - B - A
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::mat4 projection;
+	glm::mat4 view;
+	projection = glm::perspective(glm::radians(camera.Zoom),
+		(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+	view = camera.GetViewMatrix();
+
+
+	if (elapsedTime < 1.0f) {
+		textTexture = texWASD;
+	}
+	else if (elapsedTime < 2.0f) {
+		textTexture = texCamera;
+	}
+	else if (elapsedTime < 3.0f) {
+		textTexture = texTrash;
+	}
+	else {
+		return false;
+		elapsedTime = 0.0f;
+	}
+
+	
+	// Mostrar imagen de texto como overlay en pantalla completa
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	fullscreenShader->use();
+	glBindVertexArray(quadVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textTexture);
+	fullscreenShader->setInt("screenTexture", 0);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+
+	glDisable(GL_BLEND);
+	glUseProgram(0);
+
+	glfwSwapBuffers(window);
+	glfwPollEvents();
+
+	return true;
 }
 
 
@@ -2505,6 +2602,8 @@ bool Update() {
 
 			proceduralTime += 0.0001;
 		}
+
+		textTexture = texPressR;
 		// Mostrar imagen de texto como overlay en pantalla completa
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
@@ -2739,7 +2838,7 @@ bool Update() {
 		}
 
 		
-
+		textTexture = texPressR;
 		// Mostrar imagen de texto como overlay en pantalla completa
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
