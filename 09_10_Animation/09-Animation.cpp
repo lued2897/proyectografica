@@ -230,9 +230,15 @@ int    activeCamera = 0; // activamos la primera cámara
 unsigned int quadVAO, quadVBO;
 unsigned int textTexture;
 unsigned int texPressR;
-unsigned int texCamera;
-unsigned int texWASD;
-unsigned int texTrash;
+unsigned int texIntro;
+unsigned int texControles;
+unsigned int texMision;
+
+
+
+unsigned int intro_state = 0;
+int prevRState = GLFW_RELEASE;
+
 
 
 float fullscreenQuad[] = {
@@ -1522,9 +1528,9 @@ bool Start() {
 	//}
 
 	//stbi_image_free(data);
-	loadTexture("textures/camera.png", texCamera);
-	loadTexture("textures/wasd.png", texWASD);
-	loadTexture("textures/basura.png", texTrash);
+	loadTexture("textures/intro.png", texIntro);
+	loadTexture("textures/controles.png", texControles);
+	loadTexture("textures/mision.png", texMision);
 	loadTexture("textures/pressR.png", texPressR);
 
 	glGenVertexArrays(1, &quadVAO);
@@ -1643,19 +1649,33 @@ bool Intro() {
 	view = camera.GetViewMatrix();
 
 
-	if (elapsedTime < 1.0f) {
-		textTexture = texWASD;
+	int currentRState = glfwGetKey(window, GLFW_KEY_R);
+
+	if (intro_state == 0) {
+		textTexture = texIntro;
+
+		if (prevRState == GLFW_PRESS && currentRState == GLFW_RELEASE)
+			intro_state = 1;
 	}
-	else if (elapsedTime < 2.0f) {
-		textTexture = texCamera;
+	else if (intro_state == 1) {
+		textTexture = texMision;
+
+		if (prevRState == GLFW_PRESS && currentRState == GLFW_RELEASE)
+			intro_state = 2;
 	}
-	else if (elapsedTime < 3.0f) {
-		textTexture = texTrash;
+	else if (intro_state == 2) {
+		textTexture = texControles;
+
+		if (prevRState == GLFW_PRESS && currentRState == GLFW_RELEASE)
+			intro_state = 3;
 	}
 	else {
 		return false;
-		elapsedTime = 0.0f;
 	}
+
+	// store the current state for next frame
+	prevRState = currentRState;
+
 
 	
 	// Mostrar imagen de texto como overlay en pantalla completa
@@ -2815,7 +2835,7 @@ bool Update() {
 				t2.model->Draw(*mLightsShader);
 
 				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
-				for (const auto& t : gTrash) {
+				for (const auto& t : gTrashBeach) {
 					if (!t2.active) continue; // solo basura que aún no se recoge
 
 					glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 2.0f, 0.0f); // y = +3 por encima
