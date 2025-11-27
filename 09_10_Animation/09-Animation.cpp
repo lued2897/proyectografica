@@ -155,7 +155,12 @@ Model* bounding_boxes_playa;
 Model* bounding_boxes_agua;
 
 
-// 
+// letreros o carteles
+Model* cartelMar1;
+Model* cartelMarmapa;
+Model* cartelPlaya1;
+Model* cartelPlayamapa;
+
 //basura
 Model *bolsa;
 Model *tenedor;
@@ -711,6 +716,10 @@ bool Start() {
 			popote->material.specular = glm::vec4(0.7f, 0.6f, 0.6f, 1.0f);
 			popote->material.alphaIndex = 40; //plastico rojo
 		//cofre = new Model("models/cofreahorasi.fbx");
+		cartelMar1 = new Model("models/Cartelmar1.fbx");
+		cartelMarmapa = new Model("models/Cartelmarmapa.fbx");
+		cartelPlaya1 = new Model("models/cartelplaya1.fbx");
+		cartelPlayamapa = new Model("models/Cartelplayamapa.fbx");
 	}
 	// ================== Crear basura aleatoria Submarina ==================
 	{
@@ -1874,6 +1883,54 @@ bool Update() {
 				bounding_boxes->Draw(*mLightsShader);
 			//boat->Draw(*mLightsShader);
 
+			// ================== DIBUJAR CARTELES ESTATICOS ==================
+			{
+				glm::mat4 modelCartel;
+				float scale = 0.10f; // Puse esta escala por quenlos modelos son muy grandes.
+
+				// --- Cartel 1
+				modelCartel = glm::mat4(1.0f);
+				modelCartel = glm::translate(modelCartel, glm::vec3(6.0f, 0.0f, 7.5f));
+				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				modelCartel = glm::scale(modelCartel, glm::vec3(scale));
+				mLightsShader->setMat4("model", modelCartel);
+
+				cartelMar1->Draw(*mLightsShader);
+
+				// --- Cartel Mapa
+				modelCartel = glm::mat4(1.0f);
+				modelCartel = glm::translate(modelCartel, glm::vec3(6.0f, 0.0f, 10.0f));
+				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				modelCartel = glm::scale(modelCartel, glm::vec3(scale));
+				mLightsShader->setMat4("model", modelCartel);
+
+				cartelMarmapa->Draw(*mLightsShader);
+
+				float alturaPlaya = 0.35f;
+				float rotacionPlaya = 90.0f; // Rotación de 90 grados para que miren en la dirección que quieres
+
+				// --- Cartel Playa 1
+				modelCartel = glm::mat4(1.0f);
+				// Cambiando Z de 5.0f a 20.0f para que esté enfrente de Z=10.0f
+				modelCartel = glm::translate(modelCartel, glm::vec3(0.0f, alturaPlaya, 20.0f));
+				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				modelCartel = glm::rotate(modelCartel, glm::radians(rotacionPlaya), glm::vec3(0.0f, 0.0f, 1.0f));
+				modelCartel = glm::scale(modelCartel, glm::vec3(10.0f, 10.0f, 10.0f));
+				mLightsShader->setMat4("model", modelCartel);
+				cartelPlaya1->Draw(*mLightsShader);
+
+				// --- Cartel Playa Mapa
+				modelCartel = glm::mat4(1.0f);
+				// Cambiando Z de 5.0f a 20.0f
+				modelCartel = glm::translate(modelCartel, glm::vec3(5.0f, alturaPlaya, 20.0f));
+				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				modelCartel = glm::rotate(modelCartel, glm::radians(rotacionPlaya), glm::vec3(0.0f, 0.0f, 1.0f));
+				modelCartel = glm::scale(modelCartel, glm::vec3(scale));
+				mLightsShader->setMat4("model", modelCartel);
+				cartelPlayamapa->Draw(*mLightsShader);
+
+			}
+
 			// ================== DIBUJAR TODA LA BASURA ==================
 			{
 				for (TrashInstance& t : gTrash) {
@@ -3025,6 +3082,9 @@ glm::vec3 ComputeMovement(Camera_Movement direction, float deltaTime)
 // Procesamos entradas del teclado
 void processInput(GLFWwindow* window)
 {
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		glm::vec3 off = ComputeMovement(FORWARD, deltaTime);
 		TryMove(off*2.0f, bounding_boxes->aabbs, cameraRadius);
