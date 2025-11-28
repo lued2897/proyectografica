@@ -2899,42 +2899,43 @@ bool Update() {
 				}
 				// Dibujar el modelo si sigue activo
 				t2.model->Draw(*mLightsShader);
+			}
 
-				// Usamos el mismo material que estrella/erizo/basura
-				mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-				mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-				mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-				mLightsShader->setFloat("transparency", material01.transparency);
-				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
-				if (showArrows) {
-					for (const auto& t2 : gTrashBeach) {
-						if (!t2.active) continue; // solo basura que aún no se recoge
+			// Usamos el mismo material que estrella/erizo/basura
+			mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+			mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+			mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+			mLightsShader->setFloat("transparency", material01.transparency);
+			// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
+			if (showArrows) {
+				for (const auto& t2 : gTrashBeach) {
+					if (!t2.active) continue; // solo basura que aún no se recoge
 
-						glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 3.0f, 0.0f); // y = +3 por encima
+					glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 3.0f, 0.0f); // y = +3 por encima
 
-						glm::mat4 model = glm::mat4(1.0f);
-						model = glm::translate(model, arrowPos);
+					glm::mat4 model = glm::mat4(1.0f);
+					model = glm::translate(model, arrowPos);
 
-						// Ángulo de giro en Y usando el mismo tiempo que los animales
-						float arrowAngleY = proceduralTime2 * 1.0 * 100000; // en grados
+					// Ángulo de giro en Y usando el mismo tiempo que los animales
+					float arrowAngleY = proceduralTime2 * 1.0 * 100000; // en grados
 
-						// Primero giramos alrededor de Y (para que la flecha “rote”)
-						model = glm::rotate(model, glm::radians(arrowAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+					// Primero giramos alrededor de Y (para que la flecha “rote”)
+					model = glm::rotate(model, glm::radians(arrowAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
 
-						// Orientación de la flecha: ejemplo, apuntando hacia abajo
-						model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					// Orientación de la flecha: ejemplo, apuntando hacia abajo
+					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-						// Escala de la flecha (ajusta a ojo)
-						model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+					// Escala de la flecha (ajusta a ojo)
+					model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
 
-						mLightsShader->setMat4("model", model);
+					mLightsShader->setMat4("model", model);
 
 					
 
-						flecha->Draw(*mLightsShader);
-					}
+					flecha->Draw(*mLightsShader);
 				}
 			}
+			
 		
 
 			//Animación del cofre
