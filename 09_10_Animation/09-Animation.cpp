@@ -102,6 +102,7 @@ bool draw_cigarro = true;
 bool draw_colliders = false;
 
 bool girocofre = false;
+bool showArrows = false;
 
 //Generación de algas aleatorias
 const int NUM_ALGAS = 200;
@@ -219,6 +220,7 @@ std::vector<Light> Lights_playa;
 Material material01;
 
 float proceduralTime = 0.0f;
+float proceduralTime2 = 0.0f;
 float wavesTime = 0.0f;
 glm::vec4 WHITE(0.8f, 0.8f, 0.8, 1.0f);
 
@@ -535,6 +537,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 
 
 
+
 //para cambiar la cancion
 
 std::string currentSceneMusic = "";
@@ -775,7 +778,7 @@ bool Start() {
 				gTrash.push_back(t);
 			}
 			};
-
+		 
 		// ---- 3) Crear cada tipo de basura con un radio aproximado (para la prueba de colisión)
 		//        Ajusta los radios según el tamaño real de cada modelo.
 		addTrashInstances(bolsa, -90.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
@@ -1255,7 +1258,7 @@ bool Start() {
 			// Tiempo inicial
 			C.time = 0.0f;
 		}
-	}
+	} 
 	// ================== Inicializar cangrejos (movimiento lineal) ==================
 	{
 		gCangrejos.clear();
@@ -1959,32 +1962,38 @@ bool Update() {
 					t.model->Draw(*mLightsShader);
 				}
 				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
-				for (const auto& t : gTrash) {
-					if (!t.active) continue; // solo basura que aún no se recoge
+				if (showArrows) {
+					for (const auto& t : gTrash) {
+						if (!t.active) continue; // solo basura que aún no se recoge
 
-					glm::vec3 arrowPos = t.position + glm::vec3(0.0f, 3.0f, 0.0f); // y = +3 por encima
+						glm::vec3 arrowPos = t.position + glm::vec3(0.0f, 3.0f, 0.0f); // y = +3 por encima
 
-					glm::mat4 model = glm::mat4(1.0f);
-					model = glm::translate(model, arrowPos);
+						glm::mat4 model = glm::mat4(1.0f);
+						model = glm::translate(model, arrowPos);
 
-					// Orientación de la flecha: ejemplo, apuntando hacia abajo
-					// (ajusta el eje/ángulo según cómo venga el modelo Flecha.fbx)
-					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+						// Ángulo de giro en Y usando el mismo tiempo que los animales
+						float arrowAngleY = proceduralTime * 1.0 * 100000; // en grados
 
-					// Escala de la flecha (ajusta a ojo)
-					model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+						// Primero giramos alrededor de Y (para que la flecha “rote”)
+						model = glm::rotate(model, glm::radians(arrowAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
 
-					mLightsShader->setMat4("model", model);
+						// Orientación de la flecha: ejemplo, apuntando hacia abajo
+						model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-					// Usamos el mismo material que estrella/erizo/basura
-					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-					mLightsShader->setFloat("transparency", material01.transparency);
+						// Escala de la flecha (ajusta a ojo)
+						model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
 
-					flecha->Draw(*mLightsShader);
+						mLightsShader->setMat4("model", model);
+
+						// Usamos el mismo material que estrella/erizo/basura
+						mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+						mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+						mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+						mLightsShader->setFloat("transparency", material01.transparency);
+
+						flecha->Draw(*mLightsShader);
+					}
 				}
-
 			}
 
 
@@ -2897,28 +2906,34 @@ bool Update() {
 				mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
 				mLightsShader->setFloat("transparency", material01.transparency);
 				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
-				for (const auto& t2 : gTrashBeach) {
-					if (!t2.active) continue; // solo basura que aún no se recoge
+				if (showArrows) {
+					for (const auto& t2 : gTrashBeach) {
+						if (!t2.active) continue; // solo basura que aún no se recoge
 
-					glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 2.0f, 0.0f); // y = +3 por encima
+						glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 3.0f, 0.0f); // y = +3 por encima
 
-					glm::mat4 model = glm::mat4(1.0f);
-					model = glm::translate(model, arrowPos);
+						glm::mat4 model = glm::mat4(1.0f);
+						model = glm::translate(model, arrowPos);
 
-					// Orientación de la flecha: ejemplo, apuntando hacia abajo
-					// (ajusta el eje/ángulo según cómo venga el modelo Flecha.fbx)
-					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+						// Ángulo de giro en Y usando el mismo tiempo que los animales
+						float arrowAngleY = proceduralTime2 * 1.0 * 100000; // en grados
 
-					// Escala de la flecha (ajusta a ojo)
-					model = glm::scale(model, glm::vec3(0.35f, 0.35f, 0.35f));
+						// Primero giramos alrededor de Y (para que la flecha “rote”)
+						model = glm::rotate(model, glm::radians(arrowAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
 
-					mLightsShader->setMat4("model", model);
+						// Orientación de la flecha: ejemplo, apuntando hacia abajo
+						model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+						// Escala de la flecha (ajusta a ojo)
+						model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+
+						mLightsShader->setMat4("model", model);
 
 					
 
-					flecha->Draw(*mLightsShader);
+						flecha->Draw(*mLightsShader);
+					}
 				}
-
 			}
 		
 
@@ -3030,9 +3045,9 @@ bool Update() {
 
 		PlaySceneMusic("sounds/OlasdeSal.mp3"); // música playa
 
-
+		proceduralTime2 += 0.0001;
 	}
-	 
+	  
 	
 	// glfw: swap buffers 
 	glfwSwapBuffers(window);
@@ -3195,6 +3210,16 @@ void processInput(GLFWwindow* window)
 
 	f1Last = f1Now;
 	f2Last = f2Now;
+
+	// Toggle de flechas con la tecla F (una sola vez por pulsación)
+	static bool fLast = false;
+	bool fNow = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
+
+	if (fNow && !fLast) {
+		showArrows = !showArrows;
+		std::cout << "Flechas: " << (showArrows ? "ON" : "OFF") << std::endl;
+	}
+	fLast = fNow;
 
 	// Sincronizar la posición del jugador con la cámara activa
 	position = camera.Position;
