@@ -530,7 +530,7 @@ glm::mat4 orientAlongPath(const glm::vec3& current, const glm::vec3& next)
 	const int NUM_TRASH_PER_TYPE = 15;   // 10 por tipo
 	std::vector<TrashInstance> gTrash;   // todos los objetos de basura
 	// == basura para la PLAYA ===
-	const int NUM_TRASH_BEACH_PER_TYPE = 10;
+	const int NUM_TRASH_BEACH_PER_TYPE = 6;
 	std::vector<TrashInstance> gTrashBeach;
 
 
@@ -2891,8 +2891,13 @@ bool Update() {
 				// Dibujar el modelo si sigue activo
 				t2.model->Draw(*mLightsShader);
 
+				// Usamos el mismo material que estrella/erizo/basura
+				mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
+				mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
+				mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
+				mLightsShader->setFloat("transparency", material01.transparency);
 				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
-				for (const auto& t : gTrashBeach) {
+				for (const auto& t2 : gTrashBeach) {
 					if (!t2.active) continue; // solo basura que aún no se recoge
 
 					glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 2.0f, 0.0f); // y = +3 por encima
@@ -2909,11 +2914,7 @@ bool Update() {
 
 					mLightsShader->setMat4("model", model);
 
-					// Usamos el mismo material que estrella/erizo/basura
-					mLightsShader->setVec4("MaterialAmbientColor", material01.ambient);
-					mLightsShader->setVec4("MaterialDiffuseColor", material01.diffuse);
-					mLightsShader->setVec4("MaterialSpecularColor", material01.specular);
-					mLightsShader->setFloat("transparency", material01.transparency);
+					
 
 					flecha->Draw(*mLightsShader);
 				}
