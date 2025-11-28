@@ -716,10 +716,10 @@ bool Start() {
 			popote->material.specular = glm::vec4(0.7f, 0.6f, 0.6f, 1.0f);
 			popote->material.alphaIndex = 40; //plastico rojo
 		//cofre = new Model("models/cofreahorasi.fbx");
-		cartelMar1 = new Model("models/Cartelmar1.fbx");
-		cartelMarmapa = new Model("models/Cartelmarmapa.fbx");
-		cartelPlaya1 = new Model("models/cartelplaya1.fbx");
-		cartelPlayamapa = new Model("models/Cartelplayamapa.fbx");
+		/*cartelMar1 = new Model("models/Cartelmar1.fbx");
+		cartelMarmapa = new Model("models/Cartelmarmapa.fbx");*/
+	/*	cartelPlaya1 = new Model("models/cartelplaya1.fbx");
+		cartelPlayamapa = new Model("models/Cartelplayamapa.fbx");*/
 	}
 	// ================== Crear basura aleatoria Submarina ==================
 	{
@@ -1885,49 +1885,49 @@ bool Update() {
 
 			// ================== DIBUJAR CARTELES ESTATICOS ==================
 			{
-				glm::mat4 modelCartel;
-				float scale = 0.10f; // Puse esta escala por quenlos modelos son muy grandes.
+				//glm::mat4 modelCartel;
+				//float scale = 0.10f; // Puse esta escala por quenlos modelos son muy grandes.
 
-				// --- Cartel 1
-				modelCartel = glm::mat4(1.0f);
-				modelCartel = glm::translate(modelCartel, glm::vec3(6.0f, 0.0f, 7.5f));
-				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				modelCartel = glm::scale(modelCartel, glm::vec3(scale));
-				mLightsShader->setMat4("model", modelCartel);
+				//// --- Cartel 1
+				//modelCartel = glm::mat4(1.0f);
+				//modelCartel = glm::translate(modelCartel, glm::vec3(6.0f, 0.0f, 7.5f));
+				//modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				//modelCartel = glm::scale(modelCartel, glm::vec3(scale));
+				//mLightsShader->setMat4("model", modelCartel);
 
-				cartelMar1->Draw(*mLightsShader);
+				//cartelMar1->Draw(*mLightsShader);
 
-				// --- Cartel Mapa
-				modelCartel = glm::mat4(1.0f);
-				modelCartel = glm::translate(modelCartel, glm::vec3(6.0f, 0.0f, 10.0f));
-				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				modelCartel = glm::scale(modelCartel, glm::vec3(scale));
-				mLightsShader->setMat4("model", modelCartel);
+				//// --- Cartel Mapa
+				//modelCartel = glm::mat4(1.0f);
+				//modelCartel = glm::translate(modelCartel, glm::vec3(6.0f, 0.0f, 10.0f));
+				//modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				//modelCartel = glm::scale(modelCartel, glm::vec3(scale));
+				//mLightsShader->setMat4("model", modelCartel);
 
-				cartelMarmapa->Draw(*mLightsShader);
+				//cartelMarmapa->Draw(*mLightsShader);
 
-				float alturaPlaya = 0.35f;
-				float rotacionPlaya = 90.0f; // Rotación de 90 grados para que miren en la dirección que quieres
+				//float alturaPlaya = 0.35f;
+				//float rotacionPlaya = 90.0f; // Rotación de 90 grados para que miren en la dirección que quieres
 
-				// --- Cartel Playa 1
-				modelCartel = glm::mat4(1.0f);
-				// Cambiando Z de 5.0f a 20.0f para que esté enfrente de Z=10.0f
-				modelCartel = glm::translate(modelCartel, glm::vec3(0.0f, alturaPlaya, 20.0f));
-				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				modelCartel = glm::rotate(modelCartel, glm::radians(rotacionPlaya), glm::vec3(0.0f, 0.0f, 1.0f));
-				modelCartel = glm::scale(modelCartel, glm::vec3(10.0f, 10.0f, 10.0f));
-				mLightsShader->setMat4("model", modelCartel);
-				cartelPlaya1->Draw(*mLightsShader);
+				//// --- Cartel Playa 1
+				//modelCartel = glm::mat4(1.0f);
+				//// Cambiando Z de 5.0f a 20.0f para que esté enfrente de Z=10.0f
+				//modelCartel = glm::translate(modelCartel, glm::vec3(0.0f, alturaPlaya, 20.0f));
+				//modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				//modelCartel = glm::rotate(modelCartel, glm::radians(rotacionPlaya), glm::vec3(0.0f, 0.0f, 1.0f));
+				//modelCartel = glm::scale(modelCartel, glm::vec3(10.0f, 10.0f, 10.0f));
+				//mLightsShader->setMat4("model", modelCartel);
+				//cartelPlaya1->Draw(*mLightsShader);
 
-				// --- Cartel Playa Mapa
-				modelCartel = glm::mat4(1.0f);
-				// Cambiando Z de 5.0f a 20.0f
-				modelCartel = glm::translate(modelCartel, glm::vec3(5.0f, alturaPlaya, 20.0f));
-				modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				modelCartel = glm::rotate(modelCartel, glm::radians(rotacionPlaya), glm::vec3(0.0f, 0.0f, 1.0f));
-				modelCartel = glm::scale(modelCartel, glm::vec3(scale));
-				mLightsShader->setMat4("model", modelCartel);
-				cartelPlayamapa->Draw(*mLightsShader);
+				//// --- Cartel Playa Mapa
+				//modelCartel = glm::mat4(1.0f);
+				//// Cambiando Z de 5.0f a 20.0f
+				//modelCartel = glm::translate(modelCartel, glm::vec3(5.0f, alturaPlaya, 20.0f));
+				//modelCartel = glm::rotate(modelCartel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				//modelCartel = glm::rotate(modelCartel, glm::radians(rotacionPlaya), glm::vec3(0.0f, 0.0f, 1.0f));
+				//modelCartel = glm::scale(modelCartel, glm::vec3(scale));
+				//mLightsShader->setMat4("model", modelCartel);
+				//cartelPlayamapa->Draw(*mLightsShader);
 
 			}
 
@@ -2799,7 +2799,7 @@ bool Update() {
 			fresnelShader->setFloat("_Scale", 0.7f);   // strong fresnel edge
 			fresnelShader->setFloat("_Power", 5.0f);   // fast falloff
 			fresnelShader->setFloat("time", wavesTime);
-			wavesTime += 0.01;
+			wavesTime += 0.04;
 
 			gridMesh->Draw(*fresnelShader);
 
@@ -2899,7 +2899,7 @@ bool Update() {
 				// ================== DIBUJAR FLECHAS SOBRE BASURA ACTIVA ==================
 				for (const auto& t2 : gTrashBeach) {
 					if (!t2.active) continue; // solo basura que aún no se recoge
-
+					//std::cout << gTrashBeach.size() << std::endl;
 					glm::vec3 arrowPos = t2.position + glm::vec3(0.0f, 2.0f, 0.0f); // y = +3 por encima
 
 					glm::mat4 model = glm::mat4(1.0f);

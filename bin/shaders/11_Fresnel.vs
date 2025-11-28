@@ -44,7 +44,7 @@ void main(void)
     float dist = length(in_Position.xy);
 
     // Waves collapsing into the center:
-    in_Position.z += 0.05 * sin(dist * 0.5 + time * 0.03);
+    in_Position.z += 0.08 * sin(dist * 0.5 + time * 0.03);
 
     // (Optional: waves expanding outward)
     // in_Position.z += waveHeight * sin(dist * waveRadius - time * 0.03);
